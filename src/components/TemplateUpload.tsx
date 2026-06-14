@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Upload, Card, Tag, Typography, Alert, Space } from 'antd';
 import { InboxOutlined, FileTextOutlined, DeleteOutlined } from '@ant-design/icons';
 import { parseTemplate } from '../utils/templateParser';
+import { saveLastTemplate } from '../utils/storage';
 import type { TemplateData } from '../types';
 
 const { Dragger } = Upload;
@@ -44,14 +45,23 @@ export default function TemplateUpload({
         return false;
       }
 
-      onTemplateLoaded({
+      const templateData: TemplateData = {
         id: crypto.randomUUID(),
         name: file.name.replace(/\.docx$/i, ''),
         fileName: file.name,
         variables: result.variables,
         rawArrayBuffer: buffer,
         createdAt: Date.now(),
+      };
+
+      saveLastTemplate({
+        templateName: templateData.name,
+        variables: templateData.variables,
+        updatedAt: Date.now(),
+        lastMode: 'manual',
       });
+
+      onTemplateLoaded(templateData);
     } catch {
       setError('读取文件失败，请重试。');
     } finally {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Button, Typography, Alert, Progress, Space, Table, Divider, Input,
 } from 'antd';
@@ -6,6 +6,7 @@ import {
   PlusOutlined, CopyOutlined, DeleteOutlined, RocketOutlined, WarningOutlined,
 } from '@ant-design/icons';
 import { generateBatchDocx } from '../utils/docxGenerator';
+import { getManualDraft, saveManualDraft, variablesMatch } from '../utils/storage';
 import { MAX_BATCH_ROWS } from '../utils/constants';
 import type { TemplateData, BatchRow } from '../types';
 
@@ -53,18 +54,50 @@ function validateRows(rows: BatchRow[], variables: string[]): {
   };
 }
 
+function loadDraft(variables: string[]): { rows: BatchRow[]; restored: boolean } {
+  const draft = getManualDraft();
+  if (!draft || !variablesMatch(draft.variables, variables)) {
+    return { rows: Array.from({ length: 3 }, () => createEmptyRow(variables)), restored: false };
+  }
+  const rows = draft.rows.length > 0
+    ? draft.rows.slice(0, MAX_BATCH_ROWS)
+    : Array.from({ length: 3 }, () => createEmptyRow(variables));
+  return { rows, restored: true };
+}
+
 export default function ManualBatchGenerate({ template }: Props) {
-  const [rows, setRows] = useState<BatchRow[]>(() =>
-    Array.from({ length: 3 }, () => createEmptyRow(template.variables))
-  );
+  const variables = template.variables;
+  const [initData] = useState(() => loadDraft(variables));
+  const [rows, setRows] = useState<BatchRow[]>(initData.rows);
   const [genState, setGenState] = useState<GenState>('idle');
   const [progress, setProgress] = useState(0);
   const [progressText, setProgressText] = useState('');
   const [genError, setGenError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(initData.restored);
   const tableRef = useRef<HTMLDivElement>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const variables = template.variables;
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveManualDraft(variables, rows);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [variables, rows]);
+
+  const debouncedSave = useCallback((currentRows: BatchRow[]) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveManualDraft(variables, currentRows);
+    }, 2000);
+  }, [variables]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   const addRow = useCallback(() => {
     setRows((prev) => [...prev, createEmptyRow(variables)]);
@@ -82,19 +115,22 @@ export default function ManualBatchGenerate({ template }: Props) {
   }, []);
 
   const clearAll = useCallback(() => {
-    setRows(Array.from({ length: 3 }, () => createEmptyRow(variables)));
+    const fresh = Array.from({ length: 3 }, () => createEmptyRow(variables));
+    setRows(fresh);
     setShowValidation(false);
     setGenState('idle');
     setGenError(null);
+    saveManualDraft(variables, fresh);
   }, [variables]);
 
   const updateCell = useCallback((rowIndex: number, varName: string, value: string) => {
     setRows((prev) => {
       const next = [...prev];
       next[rowIndex] = { ...next[rowIndex], [varName]: value };
+      debouncedSave(next);
       return next;
     });
-  }, []);
+  }, [debouncedSave]);
 
   const handlePaste = useCallback((e: React.ClipboardEvent, startRow: number, startCol: number) => {
     const text = e.clipboardData.getData('text/plain');
@@ -129,9 +165,10 @@ export default function ManualBatchGenerate({ template }: Props) {
         }
       }
 
+      debouncedSave(next);
       return next;
     });
-  }, [variables]);
+  }, [variables, debouncedSave]);
 
   const validation = validateRows(rows, variables);
   const canGenerate = validation.rowErrors.length === 0 && validation.valid > 0;
@@ -219,6 +256,17 @@ export default function ManualBatchGenerate({ template }: Props) {
 
   return (
     <div>
+      {draftRestored && (
+        <Alert
+          type="info"
+          showIcon
+          message="已自动恢复上次草稿数据"
+          closable
+          onClose={() => setDraftRestored(false)}
+          style={{ marginBottom: 12 }}
+        />
+      )}
+
       <Space style={{ marginBottom: 12 }} wrap>
         <Button icon={<PlusOutlined />} onClick={addRow}>
           新增一行

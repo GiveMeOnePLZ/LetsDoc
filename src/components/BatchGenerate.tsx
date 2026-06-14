@@ -18,6 +18,7 @@ const { Text } = Typography;
 
 interface Props {
   template: TemplateData;
+  defaultActiveTab?: 'manual' | 'excel';
 }
 
 type UploadState = 'idle' | 'validated' | 'generating' | 'done' | 'error';
@@ -194,7 +195,9 @@ function ExcelImport({ template }: { template: TemplateData }) {
   );
 }
 
-export default function BatchGenerate({ template }: Props) {
+export default function BatchGenerate({ template, defaultActiveTab = 'manual' }: Props) {
+  const [activeTab, setActiveTab] = useState(defaultActiveTab);
+
   return (
     <Card
       title={
@@ -205,6 +208,8 @@ export default function BatchGenerate({ template }: Props) {
       }
     >
       <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as 'manual' | 'excel')}
         items={[
           {
             key: 'manual',

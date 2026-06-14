@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Layout, Steps, Typography, Collapse } from 'antd';
-import { InboxOutlined, FormOutlined } from '@ant-design/icons';
+import { Layout, Steps, Typography, Collapse, Alert, Button, Space } from 'antd';
+import { InboxOutlined, FormOutlined, DeleteOutlined } from '@ant-design/icons';
 import AppHeader from './components/Header';
 import TemplateUpload from './components/TemplateUpload';
 import SingleGenerate from './components/SingleGenerate';
 import BatchGenerate from './components/BatchGenerate';
+import { getLastTemplate, clearAllStorage } from './utils/storage';
 import type { TemplateData } from './types';
 import './App.css';
 
-const { Content } = Layout;
+const { Content, Footer } = Layout;
 const { Text } = Typography;
 
 const guideItems = [
@@ -56,7 +57,23 @@ const guideItems = [
 
 function App() {
   const [template, setTemplate] = useState<TemplateData | null>(null);
+  const [lastTemplateInfo, setLastTemplateInfo] = useState(() => getLastTemplate());
+  const [cleared, setCleared] = useState(false);
+
   const currentStep = template ? 1 : 0;
+  const defaultTab = lastTemplateInfo?.lastMode === 'excel' ? 'excel' : 'manual';
+
+  const handleClearAll = () => {
+    clearAllStorage();
+    setLastTemplateInfo(null);
+    setCleared(true);
+    setTimeout(() => setCleared(false), 2000);
+  };
+
+  const handleTemplateLoaded = (t: TemplateData) => {
+    setTemplate(t);
+    setLastTemplateInfo(getLastTemplate());
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f5f5f5' }}>
@@ -71,15 +88,33 @@ function App() {
           style={{ marginBottom: 24 }}
         />
 
+        {!template && lastTemplateInfo && (
+          <Alert
+            type="info"
+            showIcon
+            message={`检测到上次使用的模板：${lastTemplateInfo.templateName}`}
+            description="由于浏览器安全限制，请重新上传该 .docx 模板后继续生成。系统仅保存模板名称和变量清单，不保存文件本体。"
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
         <section className="section-card">
           <Text strong style={{ fontSize: 14, color: '#666', display: 'block', marginBottom: 12 }}>
             1 / 2 — 上传模板
           </Text>
           <TemplateUpload
             template={template}
-            onTemplateLoaded={setTemplate}
+            onTemplateLoaded={handleTemplateLoaded}
             onTemplateCleared={() => setTemplate(null)}
           />
+          {!template && (
+            <Space style={{ marginTop: 12 }}>
+              <Button size="small" icon={<DeleteOutlined />} onClick={handleClearAll}>
+                清空本地记录
+              </Button>
+              {cleared && <Text type="success" style={{ fontSize: 12 }}>已清空</Text>}
+            </Space>
+          )}
         </section>
 
         {template && (
@@ -95,7 +130,7 @@ function App() {
               <Text strong style={{ fontSize: 14, color: '#666', display: 'block', marginBottom: 12 }}>
                 2b — 批量生成
               </Text>
-              <BatchGenerate template={template} />
+              <BatchGenerate template={template} defaultActiveTab={defaultTab} />
             </section>
           </>
         )}
@@ -108,6 +143,11 @@ function App() {
           />
         </section>
       </Content>
+      <Footer style={{ textAlign: 'center', background: 'transparent', padding: '12px 24px' }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          本工具不会上传任何文件。模板文件不会被保存；草稿数据仅保存在当前浏览器 localStorage 中，可随时清空。
+        </Text>
+      </Footer>
     </Layout>
   );
 }

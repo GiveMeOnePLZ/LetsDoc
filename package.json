@@ -1,13 +1,31 @@
 {
   "name": "docx-template-generator",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "node electron/dev.cjs",
+    "electron:build": "npm run build && electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.docxgen.app",
+    "productName": "文书模板生成器",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*.cjs"
+    ],
+    "mac": {
+      "target": "dir",
+      "category": "public.app-category.productivity"
+    }
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
@@ -27,6 +45,8 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "electron": "^35.5.1",
+    "electron-builder": "^26.0.12",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",

@@ -86,3 +86,31 @@ npm run preview
 1. `package.json` 中的 `version` 字段
 2. `src/utils/constants.ts` 中的 `APP_VERSION` 常量
 3. 重新执行 `npm run build`
+
+## 桌面版分发
+
+### 构建桌面应用
+
+```bash
+npm run electron:build
+```
+
+产物在 `release/` 目录。
+
+### 分发方式
+
+- 将 `release/` 目录中的应用拷贝到目标机器
+- macOS：将 `.app` 拖入「应用程序」文件夹
+- 未签名应用需手动允许运行：
+  - macOS：系统设置 → 隐私与安全性 → 仍要打开
+  - Windows：Windows Defender SmartScreen → 仍要运行
+
+### 桌面版与网页版的区别
+
+| 功能 | 网页版 | 桌面版 |
+|------|--------|--------|
+| 运行方式 | 浏览器访问 | 双击打开 |
+| 文件处理 | 浏览器本地 | 浏览器本地（Electron 内置） |
+| 数据存储 | localStorage | localStorage |
+| 安装 | 无需安装 | 需拷贝应用 |
+| 更新 | 刷新页面 | 重新下载应用 |

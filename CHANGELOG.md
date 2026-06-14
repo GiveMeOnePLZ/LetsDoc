@@ -59,3 +59,17 @@
 ### 变更
 
 - package.json 版本号更新为 0.4.0
+
+## [0.5.0] - 2026-06-14
+
+### 新增
+
+- Electron 桌面应用支持
+- `npm run electron:dev` 桌面开发模式
+- `npm run electron:build` 桌面打包
+- 桌面版部署说明
+
+### 变更
+
+- Vite 构建基础路径改为相对路径（`base: "./"`）
+- package.json 版本号更新为 0.5.0

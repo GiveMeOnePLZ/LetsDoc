@@ -31,6 +31,29 @@ function safeGet<T>(key: string): T | null {
   }
 }
 
+function isValidLastTemplate(data: unknown): data is LastTemplateData {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    typeof d.templateName === 'string' &&
+    Array.isArray(d.variables) &&
+    d.variables.every((v: unknown) => typeof v === 'string') &&
+    typeof d.updatedAt === 'number' &&
+    (d.lastMode === 'single' || d.lastMode === 'manual' || d.lastMode === 'excel')
+  );
+}
+
+function isValidManualDraft(data: unknown): data is ManualDraftData {
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return (
+    Array.isArray(d.variables) &&
+    d.variables.every((v: unknown) => typeof v === 'string') &&
+    Array.isArray(d.rows) &&
+    typeof d.updatedAt === 'number'
+  );
+}
+
 function safeSet<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -40,7 +63,10 @@ function safeSet<T>(key: string, value: T): void {
 }
 
 export function getLastTemplate(): LastTemplateData | null {
-  return safeGet<LastTemplateData>(KEYS.lastTemplate);
+  const data = safeGet<unknown>(KEYS.lastTemplate);
+  if (data && isValidLastTemplate(data)) return data;
+  if (data) localStorage.removeItem(KEYS.lastTemplate);
+  return null;
 }
 
 export function saveLastTemplate(data: LastTemplateData): void {
@@ -48,7 +74,10 @@ export function saveLastTemplate(data: LastTemplateData): void {
 }
 
 export function getManualDraft(): ManualDraftData | null {
-  return safeGet<ManualDraftData>(KEYS.manualDraft);
+  const data = safeGet<unknown>(KEYS.manualDraft);
+  if (data && isValidManualDraft(data)) return data;
+  if (data) localStorage.removeItem(KEYS.manualDraft);
+  return null;
 }
 
 export function saveManualDraft(variables: string[], rows: BatchRow[]): void {

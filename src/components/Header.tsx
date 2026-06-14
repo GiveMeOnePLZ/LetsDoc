@@ -1,5 +1,6 @@
 import { FileTextOutlined } from '@ant-design/icons';
 import { Layout, Typography } from 'antd';
+import { APP_VERSION } from '../utils/constants';
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -20,7 +21,7 @@ export default function AppHeader() {
       <Title level={4} style={{ margin: 0, color: '#1f1f1f', fontWeight: 600 }}>
         文书模板生成器
       </Title>
-      <span style={{ marginLeft: 12, color: '#999', fontSize: 12 }}>V0.1</span>
+      <span style={{ marginLeft: 12, color: '#999', fontSize: 12 }}>{APP_VERSION}</span>
     </Header>
   );
 }

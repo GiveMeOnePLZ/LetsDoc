@@ -1,3 +1,5 @@
+export const APP_VERSION = 'v0.4.0';
+
 export const PLACEHOLDER_REGEX = /\{\{([^{}]+)\}\}/g;
 
 export const VALID_VARIABLE_NAME = /^[\u4e00-\u9fa5a-zA-Z0-9_]+$/;

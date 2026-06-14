@@ -120,6 +120,40 @@ npm run build
 - JSZip（批量打包）
 - FileSaver（文件下载）
 
+## 分发与部署
+
+本工具是纯前端应用，所有文件处理在浏览器中完成，用户文件不会上传到任何服务器。
+
+### 生产构建
+
+```bash
+npm run build
+```
+
+构建产物在 `dist/` 目录。
+
+### 本地预览
+
+```bash
+npm run preview
+```
+
+浏览器打开 `http://localhost:4173` 预览生产构建。
+
+### 静态部署
+
+将 `dist/` 目录部署到任意静态网站服务即可：
+
+- **公网部署**：GitHub Pages、Cloudflare Pages、Netlify、Vercel
+- **内网部署**：单位内网静态服务器、Nginx、Apache、IIS
+- **本地使用**：建议通过 `npm run preview` 启动本地服务器
+
+不建议直接双击 `dist/index.html` 使用（部分浏览器会限制本地文件的 API 访问）。
+
+非技术用户只需访问部署后的网址即可使用。
+
+详细部署指南见 [docs/deploy.md](docs/deploy.md)。
+
 ## 验收清单
 
 以下为 V0.1 人工验收用例，逐项测试通过即视为验收合格。

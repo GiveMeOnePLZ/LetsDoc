@@ -1,0 +1,23 @@
+.section-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  border: 1px solid #f0f0f0;
+}
+
+.section-card:last-child {
+  margin-bottom: 0;
+}
+
+.ant-steps {
+  margin-bottom: 8px;
+}
+
+.row-empty td {
+  background: #fafafa !important;
+}
+
+.row-error td {
+  background: #fff2f0 !important;
+}

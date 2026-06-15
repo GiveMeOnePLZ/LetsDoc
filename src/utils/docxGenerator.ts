@@ -11,7 +11,7 @@ const DOCX_OPTIONS = {
   linebreaks: true,
 };
 
-function sanitizeFileName(name: string): string {
+export function sanitizeFileName(name: string): string {
   return name.replace(ILLEGAL_FILENAME_CHARS, '_');
 }
 

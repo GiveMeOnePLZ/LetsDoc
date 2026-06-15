@@ -6,7 +6,7 @@ import {
   PlusOutlined, CopyOutlined, DeleteOutlined, RocketOutlined, WarningOutlined,
   CalendarOutlined, AimOutlined,
 } from '@ant-design/icons';
-import { generateBatchDocx } from '../utils/docxGenerator';
+import { generateSingleDocx, generateBatchDocx, sanitizeFileName } from '../utils/docxGenerator';
 import { getManualDraft, saveManualDraft, variablesMatch, isDateVariable, getTodayFormatted } from '../utils/storage';
 import { MAX_BATCH_ROWS } from '../utils/constants';
 import type { TemplateData, BatchRow } from '../types';
@@ -243,21 +243,39 @@ export default function ManualBatchGenerate({ template }: Props) {
     setGenError(null);
 
     try {
-      await generateBatchDocx(
-        template.rawArrayBuffer,
-        variables,
-        validRows,
-        (current, total) => {
-          setProgress(Math.round((current / total) * 100));
-          setProgressText(`正在生成 ${current} / ${total}`);
-          if (current === total) setProgressText('正在打包 zip...');
-        }
-      );
-      setProgressText('生成完成');
-      setGenState('done');
+      if (validRows.length === 1) {
+        const row = validRows[0];
+        const firstVar = variables[0];
+        const firstVal = firstVar ? (row[firstVar] || '').trim() : '';
+        const safeTemplateName = sanitizeFileName(template.name);
+        const safeFirstVal = firstVal ? sanitizeFileName(firstVal) : '';
+        const outName = safeFirstVal ? `${safeTemplateName}_${safeFirstVal}.docx` : `${safeTemplateName}.docx`;
+
+        const variablesPairs = variables.map((name) => ({
+          name,
+          value: row[name] || '',
+        }));
+
+        generateSingleDocx(template.rawArrayBuffer, variablesPairs, outName);
+        setProgressText('生成完成');
+        setGenState('done');
+      } else {
+        await generateBatchDocx(
+          template.rawArrayBuffer,
+          variables,
+          validRows,
+          (current, total) => {
+            setProgress(Math.round((current / total) * 100));
+            setProgressText(`正在生成 ${current} / ${total}`);
+            if (current === total) setProgressText('正在打包 zip...');
+          }
+        );
+        setProgressText('生成完成');
+        setGenState('done');
+      }
     } catch (err) {
       setGenError(
-        `批量生成失败: ${err instanceof Error ? err.message : '未知错误'}`
+        `生成失败: ${err instanceof Error ? err.message : '未知错误'}`
       );
       setGenState('error');
     }
@@ -341,7 +359,7 @@ export default function ManualBatchGenerate({ template }: Props) {
           disabled={!canGenerate || genState === 'generating'}
           onClick={handleGenerate}
         >
-          批量生成（{validRowCount} 份）
+          {validRowCount <= 1 ? '生成文书' : `批量生成（${validRowCount} 份）`}
         </Button>
       </Space>
 
@@ -445,7 +463,7 @@ export default function ManualBatchGenerate({ template }: Props) {
       {genState === 'done' && (
         <Alert
           type="success"
-          message={`已生成 ${validRowCount} 份文书，zip 文件已开始下载。`}
+          message={validRowCount <= 1 ? '文书已生成并开始下载。' : `已生成 ${validRowCount} 份文书，zip 文件已开始下载。`}
           showIcon
           style={{ marginTop: 8 }}
         />

@@ -1,7 +1,7 @@
 {
-  "name": "docx-template-generator",
+  "name": "doclet",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.1",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "build": {
     "appId": "com.docxgen.app",
-    "productName": "文书模板生成器",
+    "productName": "Doclet 文书模板生成器",
     "directories": {
       "output": "release"
     },

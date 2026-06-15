@@ -57,11 +57,11 @@ function validateRows(rows: BatchRow[], variables: string[]): {
 function loadDraft(variables: string[]): { rows: BatchRow[]; restored: boolean } {
   const draft = getManualDraft();
   if (!draft || !variablesMatch(draft.variables, variables)) {
-    return { rows: Array.from({ length: 3 }, () => createEmptyRow(variables)), restored: false };
+    return { rows: Array.from({ length: 1 }, () => createEmptyRow(variables)), restored: false };
   }
   const rows = draft.rows.length > 0
     ? draft.rows.slice(0, MAX_BATCH_ROWS)
-    : Array.from({ length: 3 }, () => createEmptyRow(variables));
+    : Array.from({ length: 1 }, () => createEmptyRow(variables));
   return { rows, restored: true };
 }
 
@@ -115,7 +115,7 @@ export default function ManualBatchGenerate({ template }: Props) {
   }, []);
 
   const clearAll = useCallback(() => {
-    const fresh = Array.from({ length: 3 }, () => createEmptyRow(variables));
+    const fresh = Array.from({ length: 1 }, () => createEmptyRow(variables));
     setRows(fresh);
     setShowValidation(false);
     setGenState('idle');

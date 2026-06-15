@@ -3,7 +3,7 @@ import { Layout, Steps, Typography, Collapse, Alert, Button, Space } from 'antd'
 import { InboxOutlined, FormOutlined, DeleteOutlined } from '@ant-design/icons';
 import AppHeader from './components/Header';
 import TemplateUpload from './components/TemplateUpload';
-import SingleGenerate from './components/SingleGenerate';
+import TemplateLibrary from './components/TemplateLibrary';
 import BatchGenerate from './components/BatchGenerate';
 import { getLastTemplate, clearAllStorage } from './utils/storage';
 import type { TemplateData } from './types';
@@ -59,6 +59,7 @@ function App() {
   const [template, setTemplate] = useState<TemplateData | null>(null);
   const [lastTemplateInfo, setLastTemplateInfo] = useState(() => getLastTemplate());
   const [cleared, setCleared] = useState(false);
+  const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
 
   const currentStep = template ? 1 : 0;
   const defaultTab = lastTemplateInfo?.lastMode === 'excel' ? 'excel' : 'manual';
@@ -71,6 +72,11 @@ function App() {
   };
 
   const handleTemplateLoaded = (t: TemplateData) => {
+    setTemplate(t);
+    setLastTemplateInfo(getLastTemplate());
+  };
+
+  const handleTemplateSelectedFromLibrary = (t: TemplateData) => {
     setTemplate(t);
     setLastTemplateInfo(getLastTemplate());
   };
@@ -106,6 +112,7 @@ function App() {
             template={template}
             onTemplateLoaded={handleTemplateLoaded}
             onTemplateCleared={() => setTemplate(null)}
+            onTemplateSaved={() => setLibraryRefreshKey((k) => k + 1)}
           />
           {!template && (
             <Space style={{ marginTop: 12 }}>
@@ -117,18 +124,25 @@ function App() {
           )}
         </section>
 
+        {!template && (
+          <section className="section-card">
+            <TemplateLibrary
+              key={libraryRefreshKey}
+              onTemplateSelected={handleTemplateSelectedFromLibrary}
+              onTemplateDeleted={() => {
+                // Template deleted from library but still in memory
+                // User can continue using it until page refresh
+              }}
+              currentTemplateId={undefined}
+            />
+          </section>
+        )}
+
         {template && (
           <>
             <section className="section-card">
               <Text strong style={{ fontSize: 14, color: '#666', display: 'block', marginBottom: 12 }}>
-                2a — 单份生成
-              </Text>
-              <SingleGenerate template={template} />
-            </section>
-
-            <section className="section-card">
-              <Text strong style={{ fontSize: 14, color: '#666', display: 'block', marginBottom: 12 }}>
-                2b — 批量生成
+                2 — 生成文书
               </Text>
               <BatchGenerate template={template} defaultActiveTab={defaultTab} />
             </section>

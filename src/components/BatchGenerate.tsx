@@ -203,7 +203,7 @@ export default function BatchGenerate({ template, defaultActiveTab = 'manual' }:
       title={
         <Space>
           <RocketOutlined />
-          <span>批量生成</span>
+          <span>生成文书</span>
         </Space>
       }
     >

@@ -106,3 +106,14 @@
 - 新增本地模板库组件（src/components/TemplateLibrary.tsx）
 - 更新模板上传组件，添加保存到本地模板库功能
 - 增强 IndexedDB 操作的错误处理和数据验证
+
+## [0.6.1] - 2026-06-15
+
+### 变更
+
+- 项目英文名统一为 Doclet
+- 网页标题改为"Doclet 文书模板生成器"
+- 页面 Header 标题同步更新
+- package.json name 字段改为 doclet
+- Electron 桌面版窗口标题同步更新
+- README.md 项目名称和简介更新

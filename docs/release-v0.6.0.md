@@ -1,4 +1,4 @@
-# Release v0.6.0
+# Release v0.6.0（现命名为 Doclet）
 
 发布日期：2026-06-15
 

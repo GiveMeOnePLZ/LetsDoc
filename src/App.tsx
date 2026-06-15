@@ -4,6 +4,7 @@ import { InboxOutlined, FormOutlined, DeleteOutlined } from '@ant-design/icons';
 import AppHeader from './components/Header';
 import TemplateUpload from './components/TemplateUpload';
 import TemplateLibrary from './components/TemplateLibrary';
+import TemplateDiagnostics from './components/TemplateDiagnostics';
 import BatchGenerate from './components/BatchGenerate';
 import { getLastTemplate, clearAllStorage } from './utils/storage';
 import type { TemplateData } from './types';
@@ -60,6 +61,7 @@ function App() {
   const [lastTemplateInfo, setLastTemplateInfo] = useState(() => getLastTemplate());
   const [cleared, setCleared] = useState(false);
   const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
+  const [diagnosticsHasError, setDiagnosticsHasError] = useState(false);
 
   const currentStep = template ? 1 : 0;
   const defaultTab = lastTemplateInfo?.lastMode === 'excel' ? 'excel' : 'manual';
@@ -124,6 +126,15 @@ function App() {
           )}
         </section>
 
+        {template && (
+          <section className="section-card">
+            <TemplateDiagnostics
+              template={template}
+              onErrorStateChange={setDiagnosticsHasError}
+            />
+          </section>
+        )}
+
         {!template && (
           <section className="section-card">
             <TemplateLibrary
@@ -140,6 +151,14 @@ function App() {
 
         {template && (
           <>
+            {diagnosticsHasError && (
+              <Alert
+                type="warning"
+                showIcon
+                message="模板体检存在错误，生成结果可能不正确，请先检查模板。"
+                style={{ marginBottom: 16 }}
+              />
+            )}
             <section className="section-card">
               <Text strong style={{ fontSize: 14, color: '#666', display: 'block', marginBottom: 12 }}>
                 2 — 生成文书

@@ -1,12 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  Button, Typography, Alert, Progress, Space, Table, Divider, Input,
+  Button, Typography, Alert, Progress, Space, Table, Divider, Input, Select, message,
 } from 'antd';
 import {
   PlusOutlined, CopyOutlined, DeleteOutlined, RocketOutlined, WarningOutlined,
+  CalendarOutlined, AimOutlined,
 } from '@ant-design/icons';
 import { generateBatchDocx } from '../utils/docxGenerator';
-import { getManualDraft, saveManualDraft, variablesMatch } from '../utils/storage';
+import { getManualDraft, saveManualDraft, variablesMatch, isDateVariable, getTodayFormatted } from '../utils/storage';
 import { MAX_BATCH_ROWS } from '../utils/constants';
 import type { TemplateData, BatchRow } from '../types';
 
@@ -75,8 +76,11 @@ export default function ManualBatchGenerate({ template }: Props) {
   const [genError, setGenError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [draftRestored, setDraftRestored] = useState(initData.restored);
+  const [fillColumn, setFillColumn] = useState<string | undefined>(undefined);
+  const [fillValue, setFillValue] = useState('');
   const tableRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -170,6 +174,49 @@ export default function ManualBatchGenerate({ template }: Props) {
     });
   }, [variables, debouncedSave]);
 
+  const handleFillColumn = () => {
+    if (!fillColumn || !fillValue.trim()) {
+      messageApi.warning('请选择变量列并输入要填充的值');
+      return;
+    }
+
+    setRows((prev) => {
+      const next = prev.map((row) => ({
+        ...row,
+        [fillColumn]: fillValue.trim(),
+      }));
+      debouncedSave(next);
+      return next;
+    });
+
+    messageApi.success(`已将「${fillColumn}」列填充为「${fillValue.trim()}」`);
+    setFillValue('');
+  };
+
+  const handleFillToday = () => {
+    if (fillColumn && isDateVariable(fillColumn)) {
+      setFillValue(getTodayFormatted());
+    }
+  };
+
+  const handleLocateFirstError = () => {
+    if (validation.rowErrors.length === 0) return;
+
+    const firstError = validation.rowErrors[0];
+    const rowIndex = firstError.rowIndex - 1;
+    const firstMissingField = firstError.missingFields[0];
+
+    const tableElement = tableRef.current?.querySelector('.ant-table-body');
+    if (tableElement) {
+      const rows = tableElement.querySelectorAll('tr');
+      if (rows[rowIndex]) {
+        rows[rowIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    messageApi.info(`定位到第 ${firstError.rowIndex} 行，缺少: ${firstMissingField}`);
+  };
+
   const validation = validateRows(rows, variables);
   const canGenerate = validation.rowErrors.length === 0 && validation.valid > 0;
   const validRowCount = rows.filter((row) =>
@@ -256,6 +303,8 @@ export default function ManualBatchGenerate({ template }: Props) {
 
   return (
     <div>
+      {contextHolder}
+
       {draftRestored && (
         <Alert
           type="info"
@@ -280,6 +329,11 @@ export default function ManualBatchGenerate({ template }: Props) {
         <Button onClick={handleValidate}>
           校验数据
         </Button>
+        {showValidation && validation.rowErrors.length > 0 && (
+          <Button icon={<AimOutlined />} onClick={handleLocateFirstError}>
+            定位第一个错误
+          </Button>
+        )}
         <Button
           type="primary"
           icon={<RocketOutlined />}
@@ -288,6 +342,33 @@ export default function ManualBatchGenerate({ template }: Props) {
           onClick={handleGenerate}
         >
           批量生成（{validRowCount} 份）
+        </Button>
+      </Space>
+
+      <Divider plain style={{ margin: '8px 0' }}>批量填充列</Divider>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Select
+          placeholder="选择变量列"
+          style={{ width: 150 }}
+          value={fillColumn}
+          onChange={setFillColumn}
+          options={variables.map((v) => ({ label: v, value: v }))}
+          allowClear
+        />
+        <Input
+          placeholder="输入要填充的值"
+          value={fillValue}
+          onChange={(e) => setFillValue(e.target.value)}
+          style={{ width: 200 }}
+          onPressEnter={handleFillColumn}
+        />
+        {fillColumn && isDateVariable(fillColumn) && (
+          <Button icon={<CalendarOutlined />} onClick={handleFillToday}>
+            填入今天
+          </Button>
+        )}
+        <Button onClick={handleFillColumn}>
+          填充到全部行
         </Button>
       </Space>
 
@@ -369,6 +450,12 @@ export default function ManualBatchGenerate({ template }: Props) {
           style={{ marginTop: 8 }}
         />
       )}
+
+      <div style={{ marginTop: 12 }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          常用变量值仅保存在当前浏览器本地，不会上传服务器。清理浏览器数据后会丢失。
+        </Text>
+      </div>
     </div>
   );
 }

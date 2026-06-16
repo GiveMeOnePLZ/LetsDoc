@@ -1,5 +1,5 @@
 {
-  "name": "doclet",
+  "name": "letsdoc",
   "private": true,
   "version": "0.9.0",
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "build": {
     "appId": "com.docxgen.app",
-    "productName": "Doclet 文书模板生成器",
+    "productName": "LetsDoc 文书模板生成器",
     "directories": {
       "output": "release"
     },

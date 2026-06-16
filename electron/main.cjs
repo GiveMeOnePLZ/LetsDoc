@@ -5,7 +5,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
     height: 800,
-    title: 'Doclet 文书模板生成器',
+    title: 'LetsDoc 文书模板生成器',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

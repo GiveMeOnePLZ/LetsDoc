@@ -14,7 +14,7 @@ import {
 import { exportTemplateLibrary, parseTemplateBackup, importTemplateBackup } from '../utils/templateBackup';
 import { APP_VERSION } from '../utils/constants';
 import type { SavedTemplateSummary } from '../utils/templateStore';
-import type { DocletBackupManifest } from '../utils/templateBackup';
+import type { LetsDocBackupManifest } from '../utils/templateBackup';
 import type { TemplateData } from '../types';
 
 const { Text } = Typography;
@@ -34,7 +34,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
   const [messageApi, contextHolder] = message.useMessage();
   const [importing, setImporting] = useState(false);
   const [importPreview, setImportPreview] = useState<{
-    manifest: DocletBackupManifest;
+    manifest: LetsDocBackupManifest;
     conflictCount: number;
     newCount: number;
   } | null>(null);
@@ -241,7 +241,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
       <input
         ref={fileInputRef}
         type="file"
-        accept=".doclet"
+        accept=".letsdoc,.doclet"
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
@@ -321,11 +321,11 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
 
         <div style={{ marginBottom: 16 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            导出的 .doclet 文件包含你的 Word 模板文件，请妥善保存，不要随意发送给他人。
+            导出的 .letsdoc 文件包含你的 Word 模板文件，请妥善保存，不要随意发送给他人。
           </Text>
           <br />
           <Text type="secondary" style={{ fontSize: 12 }}>
-            请仅导入你信任来源的 .doclet 文件。
+            请仅导入你信任来源的 .letsdoc 文件（新版备份格式，仍兼容导入旧版 .doclet 文件）。
           </Text>
         </div>
 

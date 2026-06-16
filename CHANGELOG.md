@@ -160,6 +160,30 @@
 - 网页录入按钮文案根据有效行数动态显示
 - 文件名清理复用 sanitizeFileName 函数
 
+## [0.9.1] - 2026-06-16
+
+### 变更
+
+- 项目品牌名由 Doclet 更名为 LetsDoc
+- 中文产品名统一为"LetsDoc 文书模板生成器"
+- package.json name 字段改为 letsdoc
+- package.json productName 改为"LetsDoc 文书模板生成器"
+- 网页标题改为"LetsDoc 文书模板生成器"
+- Header 标题同步更新
+- Electron 桌面版窗口标题同步更新
+- README 项目名称和简介更新
+- 模板库备份文件扩展名由 .doclet 改为 .letsdoc
+- 导出文件名格式改为 letsdoc-template-library-YYYYMMDD-HHmm.letsdoc
+- manifest.json 中 app 字段由 "Doclet" 改为 "LetsDoc"
+
+### 兼容性
+
+- 导入功能同时支持 .letsdoc 和旧版 .doclet 文件
+- 导入时兼容 manifest.app 为 "Doclet" 或 "LetsDoc" 的备份文件
+- localStorage key（docxgen: 前缀）保持不变，兼容旧版数据
+- IndexedDB 数据库名（docxgen-db）保持不变，兼容旧版数据
+- 历史存储 key 保留 docxgen 前缀，用于兼容旧版本本地数据
+
 ## [0.9.0] - 2026-06-15
 
 ### 新增

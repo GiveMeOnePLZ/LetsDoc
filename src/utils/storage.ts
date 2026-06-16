@@ -1,5 +1,6 @@
 import type { BatchRow } from '../types';
 
+// 历史存储 key 保留 docxgen 前缀，用于兼容旧版本本地数据。
 const PREFIX = 'docxgen:';
 
 const KEYS = {

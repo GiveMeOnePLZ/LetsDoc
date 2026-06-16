@@ -1,17 +1,14 @@
 .section-card {
   background: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 16px;
   border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .section-card:last-child {
   margin-bottom: 0;
-}
-
-.ant-steps {
-  margin-bottom: 8px;
 }
 
 .row-empty td {
@@ -20,4 +17,82 @@
 
 .row-error td {
   background: #fff2f0 !important;
+}
+
+.ant-layout-sider {
+  background: #fff !important;
+}
+
+.ant-menu-inline {
+  border-inline-end: none !important;
+}
+
+/* 通用文本样式 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.text-wrap {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+/* 防止 flex 子元素溢出 */
+.flex-child-ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-action-row,
+.generate-side-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.template-action-row .ant-btn,
+.generate-side-actions .ant-btn {
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.generate-side-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.generate-side-card .text-ellipsis {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.generate-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.generate-toolbar-left,
+.generate-toolbar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.generate-toolbar .ant-btn {
+  white-space: nowrap;
 }

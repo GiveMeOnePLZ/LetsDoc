@@ -3,7 +3,6 @@ import { saveAs } from 'file-saver';
 import { getSavedTemplates, getSavedTemplate } from './templateStore';
 
 const APP_NAME = 'LetsDoc';
-const LEGACY_APP_NAME = 'Doclet';
 
 export type LetsDocBackupManifest = {
   app: string;
@@ -86,20 +85,20 @@ export async function exportTemplateLibrary(appVersion: string): Promise<void> {
 
 export async function parseTemplateBackup(file: File): Promise<ParsedBackup> {
   const lowerName = file.name.toLowerCase();
-  if (!lowerName.endsWith('.letsdoc') && !lowerName.endsWith('.doclet')) {
-    throw new Error('备份文件格式不正确，请选择 LetsDoc 导出的 .letsdoc 或旧版 .doclet 文件。');
+  if (!lowerName.endsWith('.letsdoc')) {
+    throw new Error('备份文件格式不正确，请选择 LetsDoc 导出的 .letsdoc 文件。');
   }
 
   let zip: JSZip;
   try {
     zip = await JSZip.loadAsync(file);
   } catch {
-    throw new Error('备份文件已损坏，无法读取，请重新选择 LetsDoc 导出的 .letsdoc 或旧版 .doclet 文件。');
+    throw new Error('备份文件已损坏，无法读取，请重新选择 LetsDoc 导出的 .letsdoc 文件。');
   }
 
   const manifestFile = zip.file('manifest.json');
   if (!manifestFile) {
-    throw new Error('备份文件格式不正确，缺少 manifest.json，请选择 LetsDoc 导出的 .letsdoc 或旧版 .doclet 文件。');
+    throw new Error('备份文件格式不正确，缺少 manifest.json，请选择 LetsDoc 导出的 .letsdoc 文件。');
   }
 
   let manifest: LetsDocBackupManifest;
@@ -110,8 +109,8 @@ export async function parseTemplateBackup(file: File): Promise<ParsedBackup> {
     throw new Error('备份文件格式不正确，manifest.json 解析失败。');
   }
 
-  if (manifest.app !== APP_NAME && manifest.app !== LEGACY_APP_NAME) {
-    throw new Error('备份文件格式不正确，请选择 LetsDoc 导出的 .letsdoc 或旧版 .doclet 文件。');
+  if (manifest.app !== APP_NAME) {
+    throw new Error('备份文件格式不正确，请选择 LetsDoc 导出的 .letsdoc 文件。');
   }
 
   if (!Array.isArray(manifest.templates)) {

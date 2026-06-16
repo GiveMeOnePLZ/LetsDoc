@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Upload, Card, Tag, Typography, Alert, Space, Button, message } from 'antd';
 import { InboxOutlined, FileTextOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
 import { parseTemplate } from '../utils/templateParser';
@@ -26,6 +26,7 @@ export default function TemplateUpload({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
     setError(null);
@@ -109,7 +110,7 @@ export default function TemplateUpload({
             </Space>
           }
           extra={
-            <Space>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
               <Button
                 icon={<SaveOutlined />}
                 onClick={handleSaveToLibrary}
@@ -118,36 +119,65 @@ export default function TemplateUpload({
               >
                 保存到本地模板库
               </Button>
-              <a
+              <Button
+                type="text"
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
                 onClick={() => {
                   onTemplateCleared();
                   setError(null);
                 }}
-                style={{ color: '#ff4d4f' }}
               >
-                <DeleteOutlined /> 移除模板
-              </a>
-            </Space>
+                移除模板
+              </Button>
+            </div>
           }
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, minWidth: 0 }}
+          styles={{ body: { minWidth: 0, overflow: 'hidden' } }}
         >
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Text strong>{template.fileName}</Text>
-            <div>
-              <Text type="secondary" style={{ marginRight: 8 }}>
+          <Space direction="vertical" style={{ width: '100%', overflow: 'hidden' }}>
+            <Text strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {template.fileName}
+            </Text>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+              <Text type="secondary" style={{ flexShrink: 0 }}>
                 变量 ({template.variables.length}):
               </Text>
-              {template.variables.map((v) => (
-                <Tag key={v} color="blue" style={{ marginBottom: 4 }}>
-                  {`{{${v}}}`}
-                </Tag>
-              ))}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, minWidth: 0 }}>
+                {template.variables.map((v) => (
+                  <Tag 
+                    key={v} 
+                    color="blue" 
+                    style={{ 
+                      marginBottom: 2,
+                      maxWidth: '120px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {`{{${v}}}`}
+                  </Tag>
+                ))}
+              </div>
             </div>
           </Space>
         </Card>
       </>
     );
   }
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await handleUpload(file);
+    e.target.value = ''; // Reset file input
+  };
 
   return (
     <>
@@ -167,6 +197,16 @@ export default function TemplateUpload({
             支持标准 Word 模板，使用 {'{{变量名}}'} 格式定义可替换内容
           </p>
         </Dragger>
+        <div style={{ textAlign: 'center', marginTop: 12 }}>
+          <Button onClick={handleButtonClick} loading={loading}>上传模板</Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".docx"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+        </div>
         {error && (
           <Alert
             type="error"

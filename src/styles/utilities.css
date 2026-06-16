@@ -1,0 +1,105 @@
+/* 通用文本样式 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.text-wrap {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+/* 页面主内容区 */
+.app-content {
+  padding: 24px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 卡片样式 */
+.workspace-card,
+.page-card,
+.side-card {
+  border-radius: 12px;
+}
+
+/* 侧边栏样式 */
+.sidebar-title,
+.sidebar-template-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 表格容器 */
+.table-shell {
+  min-width: 0;
+  overflow: auto;
+}
+
+/* 工具条 */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 卡片间距 */
+.card-gap {
+  margin-bottom: 16px;
+}
+
+/* 页面外层 padding */
+.page-wrapper {
+  padding: 24px;
+}
+
+/* 侧边栏内容 */
+.sidebar-content {
+  padding-right: 16px;
+}
+
+/* 变量标签容器 */
+.variable-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 100%;
+}
+
+/* 变量标签 */
+.variable-tag {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 详情内容 */
+.detail-content {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 文件名显示 */
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* 按钮组 */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 预览区域 */
+.preview-area {
+  max-height: 300px;
+  overflow-y: auto;
+}

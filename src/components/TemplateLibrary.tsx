@@ -241,7 +241,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
       <input
         ref={fileInputRef}
         type="file"
-        accept=".letsdoc,.doclet"
+        accept=".letsdoc"
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
@@ -287,7 +287,11 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
         <Alert
           type="info"
           showIcon
-          message="本地模板库仅保存在当前浏览器 IndexedDB 中，不会上传服务器。清理浏览器数据、换电脑或换浏览器后，模板库可能丢失。请不要把唯一的重要模板只保存在浏览器中，建议保留原始 .docx 文件备份。"
+          message={
+            <span style={{ overflowWrap: 'anywhere' }}>
+              本地模板库仅保存在当前浏览器 IndexedDB 中，不会上传服务器。清理浏览器数据、换电脑或换浏览器后，模板库可能丢失。请不要把唯一的重要模板只保存在浏览器中，建议保留原始 .docx 文件备份。
+            </span>
+          }
           style={{ marginBottom: 16, fontSize: 12 }}
         />
 
@@ -320,12 +324,12 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
         </Space>
 
         <div style={{ marginBottom: 16 }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
             导出的 .letsdoc 文件包含你的 Word 模板文件，请妥善保存，不要随意发送给他人。
           </Text>
           <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            请仅导入你信任来源的 .letsdoc 文件（新版备份格式，仍兼容导入旧版 .doclet 文件）。
+          <Text type="secondary" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
+            请仅导入你信任来源的 .letsdoc 文件。
           </Text>
         </div>
 

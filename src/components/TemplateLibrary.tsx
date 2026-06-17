@@ -248,13 +248,13 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
 
       <Card
         title={
-          <Space>
-            <FolderOutlined />
-            <span>本地模板库</span>
-          </Space>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
+            <FolderOutlined style={{ flexShrink: 0 }} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>本地模板库</span>
+          </div>
         }
         extra={
-          <Space>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'flex-end' }}>
             <Button
               icon={<ReloadOutlined />}
               onClick={async () => {
@@ -280,9 +280,10 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                 </Button>
               </Popconfirm>
             )}
-          </Space>
+          </div>
         }
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 16, minWidth: 0, overflow: 'hidden' }}
+        styles={{ body: { minWidth: 0, overflow: 'hidden' } }}
       >
         <Alert
           type="info"
@@ -306,7 +307,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
           />
         )}
 
-        <Space style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
           <Button
             icon={<ExportOutlined />}
             onClick={handleExport}
@@ -321,7 +322,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
           >
             导入模板库
           </Button>
-        </Space>
+        </div>
 
         <div style={{ marginBottom: 16 }}>
           <Text type="secondary" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
@@ -396,11 +397,11 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                     )
                   }
                   description={
-                    <Space direction="vertical" size={4}>
-                      <Text type="secondary" style={{ fontSize: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <Text type="secondary" style={{ fontSize: 12, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         原文件：{item.originalFileName}
                       </Text>
-                      <Space size={16}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: 4, marginBottom: 4 }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           变量：{item.variables.length} 个
                         </Text>
@@ -410,7 +411,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           更新：{formatDate(item.updatedAt)}
                         </Text>
-                      </Space>
+                      </div>
                       <div style={{ marginTop: 4 }}>
                         {item.variables.slice(0, 5).map((v) => (
                           <Tag key={v} color="blue" style={{ marginBottom: 2, fontSize: 11 }}>
@@ -423,7 +424,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                           </Tag>
                         )}
                       </div>
-                    </Space>
+                    </div>
                   }
                 />
               </List.Item>

@@ -182,12 +182,13 @@ export default function TemplateUpload({
   return (
     <>
       {contextHolder}
-      <div>
+      <div style={{ textAlign: 'center' }}>
         <Dragger
           accept=".docx"
           showUploadList={false}
           beforeUpload={handleUpload}
           disabled={loading}
+          style={{ marginBottom: 12 }}
         >
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
@@ -197,16 +198,14 @@ export default function TemplateUpload({
             支持标准 Word 模板，使用 {'{{变量名}}'} 格式定义可替换内容
           </p>
         </Dragger>
-        <div style={{ textAlign: 'center', marginTop: 12 }}>
-          <Button onClick={handleButtonClick} loading={loading}>上传模板</Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".docx"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-        </div>
+        <Button onClick={handleButtonClick} loading={loading}>上传模板</Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".docx"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
         {error && (
           <Alert
             type="error"

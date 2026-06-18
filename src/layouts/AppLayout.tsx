@@ -25,6 +25,7 @@ export default function AppLayout({ template, onTemplateLoaded, onTemplateCleare
       case 'generate':
         return (
           <GeneratePage
+            key={template ? `${template.id}:${template.variables.join('\u0000')}` : 'no-template'}
             template={template}
             onTemplateLoaded={onTemplateLoaded}
             onTemplateCleared={onTemplateCleared}
@@ -47,6 +48,7 @@ export default function AppLayout({ template, onTemplateLoaded, onTemplateCleare
       default:
         return (
           <GeneratePage
+            key={template ? `${template.id}:${template.variables.join('\u0000')}` : 'no-template'}
             template={template}
             onTemplateLoaded={onTemplateLoaded}
             onTemplateCleared={onTemplateCleared}

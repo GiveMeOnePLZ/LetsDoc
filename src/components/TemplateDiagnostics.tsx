@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, Typography, Alert, Space, Button, Tag, Collapse } from 'antd';
 import {
   CheckCircleOutlined, WarningOutlined, InfoCircleOutlined,
@@ -74,25 +74,19 @@ export default function TemplateDiagnostics({ template, onErrorStateChange }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template.rawArrayBuffer, template.variables, refreshKey]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (diagnostics) {
       onErrorStateChange?.(diagnostics.hasError);
+    } else {
+      onErrorStateChange?.(true);
     }
   }, [diagnostics, onErrorStateChange]);
 
-  const [error, setError] = useState<string | null>(null);
-
-  if (diagnostics === null && !error) {
-    setError('模板体检失败，请确认文件是有效的 .docx 文档。');
-    onErrorStateChange?.(true);
-  }
-
   const handleRefresh = () => {
-    setError(null);
     setRefreshKey((k) => k + 1);
   };
 
-  if (error) {
+  if (diagnostics === null) {
     return (
       <Card
         title="模板体检"
@@ -104,7 +98,7 @@ export default function TemplateDiagnostics({ template, onErrorStateChange }: Pr
           </Button>
         }
       >
-        <Alert type="error" message={error} showIcon />
+        <Alert type="error" message="模板体检失败，请确认文件是有效的 .docx 文档。" showIcon />
       </Card>
     );
   }

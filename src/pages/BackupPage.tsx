@@ -6,7 +6,7 @@ import {
   ExportOutlined, UploadOutlined,
 } from '@ant-design/icons';
 import { exportTemplateLibrary, parseTemplateBackup, importTemplateBackup } from '../utils/templateBackup';
-import { saveTemplateToLibrary } from '../utils/templateStore';
+import { getSavedTemplates, saveTemplateToLibrary } from '../utils/templateStore';
 import { APP_VERSION } from '../utils/constants';
 import type { LetsDocBackupManifest } from '../utils/templateBackup';
 
@@ -46,10 +46,13 @@ export default function BackupPage({ onTemplateSaved }: Props) {
     setImporting(true);
     try {
       const parsed = await parseTemplateBackup(file);
+      const existingTemplates = await getSavedTemplates();
+      const existingNames = new Set(existingTemplates.map((t) => t.name));
+      const conflictCount = parsed.manifest.templates.filter((t) => existingNames.has(t.name)).length;
       setImportPreview({
         manifest: parsed.manifest,
-        conflictCount: 0,
-        newCount: parsed.manifest.templates.length,
+        conflictCount,
+        newCount: parsed.manifest.templates.length - conflictCount,
       });
       setImportParsed(parsed);
     } catch (err) {

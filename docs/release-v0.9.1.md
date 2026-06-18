@@ -4,7 +4,7 @@
 
 ## 品牌更名
 
-项目品牌名由 **Doclet** 更名为 **LetsDoc**。
+清理开发阶段命名残留，项目品牌名统一为 **LetsDoc**。
 
 ### 变更内容
 
@@ -19,15 +19,15 @@
 
 ### 模板库备份格式
 
-- 新导出的备份文件扩展名由 `.doclet` 改为 `.letsdoc`
+- 新导出的备份文件扩展名统一为 `.letsdoc`
 - 导出文件名格式改为 `letsdoc-template-library-YYYYMMDD-HHmm.letsdoc`
-- manifest.json 中 app 字段由 `"Doclet"` 改为 `"LetsDoc"`
+- manifest.json 中 app 字段统一为 `"LetsDoc"`
 
-### 兼容性处理
+### 格式校验
 
-- 导入功能同时支持 `.letsdoc` 和旧版 `.doclet` 文件
-- 导入时兼容 manifest.app 为 `"Doclet"` 或 `"LetsDoc"` 的备份文件
-- 页面文案说明：新版备份文件使用 `.letsdoc` 格式，仍兼容导入旧版 `.doclet` 文件
+- 导入功能仅接受 `.letsdoc` 文件
+- 导入时要求 manifest.app 为 `"LetsDoc"`
+- 页面文案说明：备份文件使用 `.letsdoc` 格式
 
 ### 保留不变
 
@@ -55,7 +55,7 @@
 
 ## 验收清单
 
-1. 页面中不再显示 Doclet，统一显示 LetsDoc
+1. 页面品牌统一显示 LetsDoc
 2. 浏览器标题显示 LetsDoc 文书模板生成器
 3. package.json name 为 letsdoc
 4. package.json productName 为 LetsDoc 文书模板生成器
@@ -64,7 +64,7 @@
 7. CHANGELOG 增加 v0.9.1 改名记录
 8. 新导出的备份文件扩展名为 `.letsdoc`
 9. 可以导入新版 `.letsdoc`
-10. 可以兼容导入旧版 `.doclet`
+10. 非 `.letsdoc` 文件会被拒绝
 11. 旧 localStorage 草稿不丢
 12. 旧 IndexedDB 模板库不丢
 13. 单份生成正常

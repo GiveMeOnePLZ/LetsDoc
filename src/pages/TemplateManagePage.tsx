@@ -104,26 +104,29 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
       {contextHolder}
       <Sider
         width={340}
+        className="template-manage-sider"
         style={{
           background: 'transparent',
           borderRight: '1px solid #f0f0f0',
           paddingRight: 16,
-          overflow: 'auto',
+          overflowX: 'hidden',
+          overflowY: 'auto',
           flexShrink: 0
         }}
       >
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', marginTop: 16 }}>
           <Input
             placeholder="搜索模板..."
-            prefix={<SearchOutlined />}
+            prefix={<SearchOutlined style={{ marginLeft: 8 }} />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
+            style={{ width: 300, textAlign: 'left' }}
           />
         </div>
         <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>共 {templates.length} 个模板</Text>
-          <Button size="small" onClick={loadTemplates} loading={loading}>刷新</Button>
+          <Text type="secondary" style={{ fontSize: 12, marginLeft: 20 }}>共 {templates.length} 个模板</Text>
+          <Button size="small" onClick={loadTemplates} loading={loading} style={{ marginRight: 20 }}>刷新</Button>
         </div>
         {filtered.length === 0 ? (
           <Empty description="暂无模板" style={{ marginTop: 40 }} />
@@ -144,6 +147,7 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
                 onClick={() => handleSelect(item.id)}
               >
                 <List.Item.Meta
+                  className="template-list-meta"
                   avatar={<FileTextOutlined style={{ fontSize: 20, color: '#1677ff', marginTop: 4 }} />}
                   title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -401,7 +401,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                   下载 Excel 模板
                 </Button>
                 <Upload accept=".xlsx" showUploadList={false} beforeUpload={handleExcelImport}>
-                  <Button block icon={<UploadOutlined />} style={{ textAlign: 'left' }}>导入 Excel</Button>
+                  <Button icon={<UploadOutlined />} style={{ width: 237, textAlign: 'left' }}>导入 Excel</Button>
                 </Upload>
               </div>
             </Card>

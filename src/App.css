@@ -96,3 +96,24 @@
 .generate-toolbar .ant-btn {
   white-space: nowrap;
 }
+
+/* 模板上传 Dragger 针对性样式覆盖 */
+.template-dragger .ant-upload.ant-upload-drag {
+  margin-left: 8px;
+  margin-top: 8px;
+}
+
+.template-dragger .ant-upload.ant-upload-btn {
+  margin-left: 0;
+}
+
+/* 模板管理页侧边栏 sider-children 宽度 */
+.template-manage-sider .ant-layout-sider-children {
+  width: 340px;
+}
+
+/* 模板管理页列表项 meta 左右边距 */
+.template-list-meta {
+  margin-left: 10px;
+  margin-right: 10px;
+}

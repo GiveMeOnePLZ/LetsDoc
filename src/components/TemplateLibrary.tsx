@@ -282,7 +282,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
             )}
           </div>
         }
-        style={{ marginBottom: 16, minWidth: 0, overflow: 'hidden' }}
+        style={{ marginBottom: 16, minWidth: 0, overflow: 'hidden', marginLeft: 8, marginRight: -8 }}
         styles={{ body: { minWidth: 0, overflow: 'hidden' } }}
       >
         <Alert

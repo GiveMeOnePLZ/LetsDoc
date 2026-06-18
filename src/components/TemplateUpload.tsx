@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Upload, Card, Tag, Typography, Alert, Space, Button, message } from 'antd';
 import { InboxOutlined, FileTextOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons';
 import { parseTemplate } from '../utils/templateParser';
@@ -26,7 +26,6 @@ export default function TemplateUpload({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
     setError(null);
@@ -117,7 +116,7 @@ export default function TemplateUpload({
                 loading={saving}
                 size="small"
               >
-                保存到本地模板库
+                保存到模板库
               </Button>
               <Button
                 type="text"
@@ -168,17 +167,6 @@ export default function TemplateUpload({
     );
   }
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await handleUpload(file);
-    e.target.value = ''; // Reset file input
-  };
-
   return (
     <>
       {contextHolder}
@@ -188,6 +176,7 @@ export default function TemplateUpload({
           showUploadList={false}
           beforeUpload={handleUpload}
           disabled={loading}
+          className="template-dragger"
           style={{ marginBottom: 12 }}
         >
           <p className="ant-upload-drag-icon">
@@ -198,14 +187,6 @@ export default function TemplateUpload({
             支持标准 Word 模板，使用 {'{{变量名}}'} 格式定义可替换内容
           </p>
         </Dragger>
-        <Button onClick={handleButtonClick} loading={loading}>上传模板</Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".docx"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
         {error && (
           <Alert
             type="error"

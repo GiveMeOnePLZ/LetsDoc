@@ -98,7 +98,7 @@
 11. 网页录入生成仍正常
 12. Excel 导入生成仍正常
 13. 本地模板库仍正常
-14. .doclet 导入导出仍正常
+14. .letsdoc 导入导出仍正常
 15. npm run lint 通过
 16. npm run build 通过
 

@@ -25,6 +25,17 @@ function extractRawPlaceholdersFromXml(xml: string): Array<{ full: string; name:
   return extractPlaceholdersFromText(text);
 }
 
+function countOccurrences(text: string, needle: string): number {
+  if (!needle) return 0;
+  let count = 0;
+  let index = text.indexOf(needle);
+  while (index !== -1) {
+    count++;
+    index = text.indexOf(needle, index + needle.length);
+  }
+  return count;
+}
+
 function findUnclosedPlaceholders(xml: string): Array<{ type: 'open' | 'close'; position: number }> {
   const results: Array<{ type: 'open' | 'close'; position: number }> = [];
   const text = stripXmlTags(xml);
@@ -63,22 +74,13 @@ function findSuspectedSplitPlaceholders(xml: string, recognizedVars: string[]): 
 
   for (const varName of recognizedVars) {
     const placeholder = `{{${varName}}}`;
-    if (text.includes(placeholder)) {
+    const textCount = countOccurrences(text, placeholder);
+    const rawXmlCount = countOccurrences(xml, placeholder);
+    if (textCount === 0 || rawXmlCount >= textCount) {
       continue;
     }
 
-    const parts = placeholder.split('');
-    let found = true;
-    for (const char of parts) {
-      if (!text.includes(char)) {
-        found = false;
-        break;
-      }
-    }
-
-    if (found && !text.includes(placeholder)) {
-      suspected.push(varName);
-    }
+    suspected.push(varName);
   }
 
   const looseRegex = /\{\{[^}]*\}\}/g;
@@ -240,8 +242,8 @@ export function runDiagnostics(
   }
 
   const varCounts = new Map<string, number>();
-  for (const v of variables) {
-    varCounts.set(v, (varCounts.get(v) || 0) + 1);
+  for (const placeholder of allRawPlaceholders) {
+    varCounts.set(placeholder.name, (varCounts.get(placeholder.name) || 0) + 1);
   }
 
   for (const [v, count] of varCounts) {

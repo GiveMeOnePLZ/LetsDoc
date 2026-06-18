@@ -111,10 +111,10 @@
 
 ### 变更
 
-- 项目英文名统一为 Doclet
-- 网页标题改为"Doclet 文书模板生成器"
+- 项目英文名统一为 LetsDoc
+- 网页标题改为"LetsDoc 文书模板生成器"
 - 页面 Header 标题同步更新
-- package.json name 字段改为 doclet
+- package.json name 字段改为 letsdoc
 - Electron 桌面版窗口标题同步更新
 - README.md 项目名称和简介更新
 
@@ -122,8 +122,8 @@
 
 ### 新增
 
-- 模板库导出：支持将本地模板库导出为 `.doclet` 备份文件
-- 模板库导入：支持从 `.doclet` 文件导入模板库
+- 模板库导出：支持将本地模板库导出为 `.letsdoc` 备份文件
+- 模板库导入：支持从 `.letsdoc` 文件导入模板库
 - 导入前预校验：验证文件格式、manifest.json、模板文件完整性
 - 导入预览：显示备份文件信息、模板总数、新增数量、同名覆盖数量
 - 导入冲突处理：同名模板自动覆盖更新
@@ -132,7 +132,7 @@
 ### 技术
 
 - 新增 `src/utils/templateBackup.ts`：备份/恢复核心逻辑
-- 使用 JSZip 生成和解析 `.doclet` 备份文件
+- 使用 JSZip 生成和解析 `.letsdoc` 备份文件
 - 使用 file-saver 下载备份文件
 
 ## [0.8.0] - 2026-06-15
@@ -194,13 +194,13 @@
 - docx 生成核心逻辑不变
 - IndexedDB schema 不变
 - localStorage key 不变
-- .letsdoc / .doclet 备份兼容不变
+- .letsdoc 备份格式不变
 
 ## [0.9.1] - 2026-06-16
 
 ### 变更
 
-- 项目品牌名由 Doclet 更名为 LetsDoc
+- 清理开发阶段命名残留，项目品牌名统一为 LetsDoc
 - 中文产品名统一为"LetsDoc 文书模板生成器"
 - package.json name 字段改为 letsdoc
 - package.json productName 改为"LetsDoc 文书模板生成器"
@@ -208,14 +208,14 @@
 - Header 标题同步更新
 - Electron 桌面版窗口标题同步更新
 - README 项目名称和简介更新
-- 模板库备份文件扩展名由 .doclet 改为 .letsdoc
+- 模板库备份文件扩展名统一为 .letsdoc
 - 导出文件名格式改为 letsdoc-template-library-YYYYMMDD-HHmm.letsdoc
-- manifest.json 中 app 字段由 "Doclet" 改为 "LetsDoc"
+- manifest.json 中 app 字段统一为 "LetsDoc"
 
 ### 兼容性
 
-- 导入功能同时支持 .letsdoc 和旧版 .doclet 文件
-- 导入时兼容 manifest.app 为 "Doclet" 或 "LetsDoc" 的备份文件
+- 导入功能仅接受 .letsdoc 文件
+- 导入时要求 manifest.app 为 "LetsDoc"
 - localStorage key（docxgen: 前缀）保持不变，兼容旧版数据
 - IndexedDB 数据库名（docxgen-db）保持不变，兼容旧版数据
 - 历史存储 key 保留 docxgen 前缀，用于兼容旧版本本地数据

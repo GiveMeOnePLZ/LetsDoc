@@ -6,20 +6,20 @@
 
 ### 模板库备份与恢复
 
-- 导出本地模板库为 `.doclet` 备份文件
-- 从 `.doclet` 文件导入模板库
+- 导出本地模板库为 `.letsdoc` 备份文件
+- 从 `.letsdoc` 文件导入模板库
 - 导入前预校验（文件格式、manifest.json、模板文件完整性）
 - 导入预览（备份版本、导出时间、模板总数、新增数量、同名覆盖数量）
 - 同名模板自动覆盖更新
 
-## `.doclet` 备份格式
+## `.letsdoc` 备份格式
 
-`.doclet` 是 Doclet 专用备份格式，本质是 zip 文件。
+`.letsdoc` 是 LetsDoc 专用备份格式，本质是 zip 文件。
 
 ### 文件结构
 
 ```
-.doclet
+.letsdoc
 ├── manifest.json
 └── templates/
     ├── {templateId}.docx
@@ -30,7 +30,7 @@
 
 ```json
 {
-  "app": "Doclet",
+  "app": "LetsDoc",
   "version": "v0.7.0",
   "exportedAt": 1718467200000,
   "templates": [
@@ -54,13 +54,13 @@
 
 1. 在「本地模板库」区域点击「导出模板库」按钮
 2. 系统读取 IndexedDB 中所有模板
-3. 生成 `.doclet` 备份文件
+3. 生成 `.letsdoc` 备份文件
 4. 浏览器自动下载文件
 
 ### 文件名格式
 
 ```
-doclet-template-library-YYYYMMDD-HHmm.doclet
+letsdoc-template-library-YYYYMMDD-HHmm.letsdoc
 ```
 
 ### 空模板库处理
@@ -72,7 +72,7 @@ doclet-template-library-YYYYMMDD-HHmm.doclet
 ### 操作步骤
 
 1. 在「本地模板库」区域点击「导入模板库」按钮
-2. 选择 `.doclet` 文件
+2. 选择 `.letsdoc` 文件
 3. 系统解析并校验文件
 4. 显示导入预览
 5. 点击「确认导入」完成导入
@@ -96,11 +96,11 @@ doclet-template-library-YYYYMMDD-HHmm.doclet
 
 | 错误场景 | 提示信息 |
 |----------|----------|
-| 非 `.doclet` 文件 | 备份文件格式不正确，请选择由 Doclet 导出的 .doclet 文件。 |
-| zip 文件损坏 | 备份文件已损坏，无法读取，请重新选择由 Doclet 导出的 .doclet 文件。 |
-| 缺少 manifest.json | 备份文件格式不正确，缺少 manifest.json，请选择由 Doclet 导出的 .doclet 文件。 |
+| 非 `.letsdoc` 文件 | 备份文件格式不正确，请选择由 LetsDoc 导出的 .letsdoc 文件。 |
+| zip 文件损坏 | 备份文件已损坏，无法读取，请重新选择由 LetsDoc 导出的 .letsdoc 文件。 |
+| 缺少 manifest.json | 备份文件格式不正确，缺少 manifest.json，请选择由 LetsDoc 导出的 .letsdoc 文件。 |
 | manifest.json 格式错误 | 备份文件格式不正确，manifest.json 解析失败。 |
-| app 不是 Doclet | 备份文件格式不正确，请选择由 Doclet 导出的 .doclet 文件。 |
+| app 不是 LetsDoc | 备份文件格式不正确，请选择由 LetsDoc 导出的 .letsdoc 文件。 |
 | 模板文件缺失 | 备份文件中缺少模板文件：{fileName} |
 | 模板文件非 .docx | 模板文件格式异常：{fileName}，不是 .docx 文件。 |
 | 变量清单格式异常 | 模板「{name}」的变量清单格式异常。 |
@@ -110,11 +110,11 @@ doclet-template-library-YYYYMMDD-HHmm.doclet
 
 ### 导出区域提示
 
-> 导出的 .doclet 文件包含你的 Word 模板文件，请妥善保存，不要随意发送给他人。
+> 导出的 .letsdoc 文件包含你的 Word 模板文件，请妥善保存，不要随意发送给他人。
 
 ### 导入区域提示
 
-> 请仅导入你信任来源的 .doclet 文件。
+> 请仅导入你信任来源的 .letsdoc 文件。
 
 ## 技术实现
 
@@ -134,20 +134,20 @@ doclet-template-library-YYYYMMDD-HHmm.doclet
 
 ### 依赖说明
 
-- JSZip：用于生成和解析 `.doclet` 备份文件（已有依赖）
+- JSZip：用于生成和解析 `.letsdoc` 备份文件（已有依赖）
 - file-saver：用于下载备份文件（已有依赖）
 
 ## 验收清单
 
 1. 空模板库导出时有提示
-2. 有模板时可以导出 `.doclet`
-3. `.doclet` 文件可以被重新导入
+2. 有模板时可以导出 `.letsdoc`
+3. `.letsdoc` 文件可以被重新导入
 4. 导入后模板库列表更新
 5. 导入后选择模板可以单份生成
 6. 导入后选择模板可以网页录入批量生成
 7. 导入后选择模板可以 Excel 导入批量生成
 8. 同名模板导入时覆盖更新
-9. 非 `.doclet` 文件拒绝
+9. 非 `.letsdoc` 文件拒绝
 10. 损坏 zip 拒绝
 11. 缺少 manifest.json 拒绝
 12. 缺少模板文件拒绝
@@ -156,7 +156,7 @@ doclet-template-library-YYYYMMDD-HHmm.doclet
 
 ## 限制说明
 
-- `.doclet` 文件包含模板文件本体，请妥善保存
+- `.letsdoc` 文件包含模板文件本体，请妥善保存
 - 同名模板导入时会覆盖，不支持保留两份
 - 不支持逐个选择导入的模板
 - 不支持导入后预览模板内容

@@ -28,6 +28,14 @@ npm run build
 
 产物在 `dist/` 目录。
 
+## 桌面版构建
+
+```bash
+npm run tauri:build
+```
+
+Windows 安装包会内嵌 WebView2 bootstrapper，便于首次安装分发。
+
 ## 模板制作方法
 
 1. 在 Word 中创建 `.docx` 文件

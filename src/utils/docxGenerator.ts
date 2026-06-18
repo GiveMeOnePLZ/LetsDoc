@@ -1,8 +1,8 @@
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
-import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { ILLEGAL_FILENAME_CHARS } from './constants';
+import { saveBlob } from './downloadFile';
 import type { VariableValuePair, BatchRow } from '../types';
 
 const DOCX_OPTIONS = {
@@ -46,18 +46,18 @@ function renderDocx(
   });
 }
 
-export function generateSingleDocx(
+export async function generateSingleDocx(
   templateBuffer: ArrayBuffer,
   variables: VariableValuePair[],
   fileName: string
-): void {
+): Promise<boolean> {
   const data: Record<string, string> = {};
   for (const { name, value } of variables) {
     data[name] = value;
   }
 
   const blob = renderDocx(templateBuffer, data);
-  saveAs(blob, sanitizeFileName(fileName));
+  return saveBlob(blob, sanitizeFileName(fileName));
 }
 
 export async function generateBatchDocx(
@@ -65,7 +65,7 @@ export async function generateBatchDocx(
   templateVariables: string[],
   rows: BatchRow[],
   onProgress?: (current: number, total: number) => void
-): Promise<void> {
+): Promise<boolean> {
   const zip = new JSZip();
   const firstVar = templateVariables[0];
 
@@ -92,5 +92,5 @@ export async function generateBatchDocx(
   }
 
   const zipBlob = await zip.generateAsync({ type: 'blob' });
-  saveAs(zipBlob, '批量生成.zip');
+  return saveBlob(zipBlob, '批量生成.zip');
 }

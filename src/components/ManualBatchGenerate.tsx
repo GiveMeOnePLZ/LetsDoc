@@ -256,11 +256,11 @@ export default function ManualBatchGenerate({ template }: Props) {
           value: row[name] || '',
         }));
 
-        generateSingleDocx(template.rawArrayBuffer, variablesPairs, outName);
-        setProgressText('生成完成');
-        setGenState('done');
+        const saved = await generateSingleDocx(template.rawArrayBuffer, variablesPairs, outName);
+        setProgressText(saved ? '生成完成' : '');
+        setGenState(saved ? 'done' : 'idle');
       } else {
-        await generateBatchDocx(
+        const saved = await generateBatchDocx(
           template.rawArrayBuffer,
           variables,
           validRows,
@@ -270,8 +270,8 @@ export default function ManualBatchGenerate({ template }: Props) {
             if (current === total) setProgressText('正在打包 zip...');
           }
         );
-        setProgressText('生成完成');
-        setGenState('done');
+        setProgressText(saved ? '生成完成' : '');
+        setGenState(saved ? 'done' : 'idle');
       }
     } catch (err) {
       setGenError(

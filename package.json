@@ -9,6 +9,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "electron:dev": "node electron/dev.cjs",
     "electron:build": "npm run build && electron-builder --mac"
   },
@@ -29,6 +31,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-fs": "^2.5.1",
     "antd": "^6.4.4",
     "docxtemplater": "^3.68.7",
     "file-saver": "^2.0.5",
@@ -40,6 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tauri-apps/cli": "^2.11.2",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",

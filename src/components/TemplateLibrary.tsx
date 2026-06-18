@@ -248,42 +248,42 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
 
       <Card
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
-            <FolderOutlined style={{ flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>本地模板库</span>
-          </div>
-        }
-        extra={
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'flex-end' }}>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={async () => {
-                const templates = await loadTemplates();
-                setTemplates(templates);
-              }}
-              loading={loading}
-              size="small"
-            >
-              刷新
-            </Button>
-            {templates.length > 0 && (
-              <Popconfirm
-                title="确认清空模板库"
-                description="此操作不可恢复，确定要继续吗？"
-                onConfirm={handleClearAll}
-                okText="确认"
-                cancelText="取消"
-                okType="danger"
+          <div className="template-library-card-title">
+            <div className="template-library-title-row">
+              <FolderOutlined style={{ flexShrink: 0 }} />
+              <span>本地模板库</span>
+            </div>
+            <div className="template-library-header-actions">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={async () => {
+                  const templates = await loadTemplates();
+                  setTemplates(templates);
+                }}
+                loading={loading}
+                size="small"
               >
-                <Button icon={<DeleteOutlined />} size="small" danger>
-                  清空
-                </Button>
-              </Popconfirm>
-            )}
+                刷新
+              </Button>
+              {templates.length > 0 && (
+                <Popconfirm
+                  title="确认清空模板库"
+                  description="此操作不可恢复，确定要继续吗？"
+                  onConfirm={handleClearAll}
+                  okText="确认"
+                  cancelText="取消"
+                  okType="danger"
+                >
+                  <Button icon={<DeleteOutlined />} size="small" danger>
+                    清空
+                  </Button>
+                </Popconfirm>
+              )}
+            </div>
           </div>
         }
-        style={{ marginBottom: 16, minWidth: 0, overflow: 'hidden', marginLeft: 8, marginRight: -8 }}
-        styles={{ body: { minWidth: 0, overflow: 'hidden' } }}
+        styles={{ header: { alignItems: 'stretch' }, body: { minWidth: 0, overflow: 'hidden' } }}
+        style={{ marginBottom: 16, minWidth: 0, overflow: 'hidden', width: '100%' }}
       >
         <Alert
           type="info"
@@ -344,45 +344,18 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
             dataSource={templates}
             renderItem={(item) => (
               <List.Item
-                actions={[
-                  <Button
-                    key="select"
-                    type={currentTemplateId === item.id ? 'primary' : 'default'}
-                    size="small"
-                    onClick={() => handleSelect(item)}
-                  >
-                    {currentTemplateId === item.id ? '使用中' : '选择'}
-                  </Button>,
-                  <Button
-                    key="rename"
-                    icon={<EditOutlined />}
-                    size="small"
-                    onClick={() => {
-                      setEditingId(item.id);
-                      setEditName(item.name);
-                    }}
-                  />,
-                  <Popconfirm
-                    key="delete"
-                    title="确认删除此模板？"
-                    onConfirm={() => handleDelete(item.id)}
-                    okText="确认"
-                    cancelText="取消"
-                  >
-                    <Button icon={<DeleteOutlined />} size="small" danger />
-                  </Popconfirm>,
-                ]}
+                className="template-library-item"
               >
                 <List.Item.Meta
+                  className="template-library-meta"
                   title={
                     editingId === item.id ? (
-                      <Space>
+                      <Space.Compact block>
                         <Input
                           size="small"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           onPressEnter={() => handleRename(item.id)}
-                          style={{ width: 200 }}
                           autoFocus
                         />
                         <Button size="small" type="primary" onClick={() => handleRename(item.id)}>
@@ -391,17 +364,17 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                         <Button size="small" onClick={() => setEditingId(null)}>
                           取消
                         </Button>
-                      </Space>
+                      </Space.Compact>
                     ) : (
-                      <Text strong>{item.name}</Text>
+                      <Text strong className="template-library-title">{item.name}</Text>
                     )
                   }
                   description={
-                    <div style={{ minWidth: 0 }}>
-                      <Text type="secondary" style={{ fontSize: 12, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div className="template-library-description">
+                      <Text type="secondary" className="template-library-file">
                         原文件：{item.originalFileName}
                       </Text>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: 4, marginBottom: 4 }}>
+                      <div className="template-library-stats">
                         <Text type="secondary" style={{ fontSize: 12 }}>
                           变量：{item.variables.length} 个
                         </Text>
@@ -412,7 +385,7 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                           更新：{formatDate(item.updatedAt)}
                         </Text>
                       </div>
-                      <div style={{ marginTop: 4 }}>
+                      <div className="template-library-tags">
                         {item.variables.slice(0, 5).map((v) => (
                           <Tag key={v} color="blue" style={{ marginBottom: 2, fontSize: 11 }}>
                             {`{{${v}}}`}
@@ -427,6 +400,32 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
                     </div>
                   }
                 />
+                <div className="template-library-actions">
+                  <Button
+                    type={currentTemplateId === item.id ? 'primary' : 'default'}
+                    size="small"
+                    onClick={() => handleSelect(item)}
+                  >
+                    {currentTemplateId === item.id ? '使用中' : '选择'}
+                  </Button>
+                  <Button
+                    icon={<EditOutlined />}
+                    size="small"
+                    title="重命名"
+                    onClick={() => {
+                      setEditingId(item.id);
+                      setEditName(item.name);
+                    }}
+                  />
+                  <Popconfirm
+                    title="确认删除此模板？"
+                    onConfirm={() => handleDelete(item.id)}
+                    okText="确认"
+                    cancelText="取消"
+                  >
+                    <Button icon={<DeleteOutlined />} size="small" danger title="删除" />
+                  </Popconfirm>
+                </div>
               </List.Item>
             )}
           />

@@ -63,6 +63,158 @@
   max-width: 100%;
 }
 
+.template-header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.template-header-actions .ant-btn {
+  flex: 0 0 auto;
+}
+
+.template-upload-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0 0;
+}
+
+.template-upload-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 22px;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.template-upload-title-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-upload-header-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.template-upload-header-actions .ant-btn {
+  flex: 0 0 auto;
+}
+
+.template-upload-header-actions .ant-btn {
+  padding-inline: 10px;
+}
+
+.template-upload-shell {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.template-library-item.ant-list-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.template-library-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 2px 0;
+}
+
+.template-library-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+.template-library-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.template-library-header-actions .ant-btn {
+  flex: 0 0 auto;
+}
+
+.template-library-meta {
+  width: 100%;
+  min-width: 0;
+}
+
+.template-library-meta .ant-list-item-meta-content {
+  min-width: 0;
+}
+
+.template-library-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-library-description {
+  min-width: 0;
+}
+
+.template-library-file {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.template-library-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.template-library-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+  margin-top: 4px;
+}
+
+.template-library-tags .ant-tag {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-library-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.template-library-actions .ant-btn {
+  flex: 0 0 auto;
+}
+
 .generate-side-card {
   min-width: 0;
   overflow: hidden;
@@ -97,14 +249,32 @@
   white-space: nowrap;
 }
 
+.generate-template-sider .ant-layout-sider-children {
+  display: flex;
+  justify-content: center;
+}
+
+.generate-template-stack {
+  width: 264px;
+  max-width: 100%;
+}
+
 /* 模板上传 Dragger 针对性样式覆盖 */
 .template-dragger .ant-upload.ant-upload-drag {
-  margin-left: 8px;
-  margin-top: 8px;
+  margin: 0;
 }
 
 .template-dragger .ant-upload.ant-upload-btn {
-  margin-left: 0;
+  width: 100%;
+  text-align: left;
+  padding: 0 12px;
+}
+
+.template-dragger .ant-upload-drag-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 /* 模板管理页侧边栏 sider-children 宽度 */

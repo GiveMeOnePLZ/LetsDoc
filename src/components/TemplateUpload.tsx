@@ -103,37 +103,39 @@ export default function TemplateUpload({
         {contextHolder}
         <Card
           title={
-            <Space>
-              <FileTextOutlined />
-              <span>当前模板</span>
-            </Space>
-          }
-          extra={
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
-              <Button
-                icon={<SaveOutlined />}
-                onClick={handleSaveToLibrary}
-                loading={saving}
-                size="small"
-              >
-                保存到模板库
-              </Button>
-              <Button
-                type="text"
-                danger
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => {
-                  onTemplateCleared();
-                  setError(null);
-                }}
-              >
-                移除模板
-              </Button>
+            <div className="template-upload-card-title">
+              <div className="template-upload-title-row">
+                <FileTextOutlined />
+                <span>当前模板</span>
+              </div>
+              <div className="template-upload-header-actions">
+                <Button
+                  icon={<SaveOutlined />}
+                  onClick={handleSaveToLibrary}
+                  loading={saving}
+                  size="small"
+                  title="保存到模板库"
+                >
+                  保存
+                </Button>
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  title="移除模板"
+                  onClick={() => {
+                    onTemplateCleared();
+                    setError(null);
+                  }}
+                >
+                  移除
+                </Button>
+              </div>
             </div>
           }
-          style={{ marginBottom: 16, minWidth: 0 }}
-          styles={{ body: { minWidth: 0, overflow: 'hidden' } }}
+          styles={{ header: { alignItems: 'stretch', paddingTop: 14, paddingBottom: 10 }, body: { minWidth: 0, overflow: 'hidden' } }}
+          style={{ margin: '8px 0 16px', minWidth: 0, overflow: 'hidden' }}
         >
           <Space direction="vertical" style={{ width: '100%', overflow: 'hidden' }}>
             <Text strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -170,14 +172,14 @@ export default function TemplateUpload({
   return (
     <>
       {contextHolder}
-      <div style={{ textAlign: 'center' }}>
+      <div className="template-upload-shell">
         <Dragger
           accept=".docx"
           showUploadList={false}
           beforeUpload={handleUpload}
           disabled={loading}
           className="template-dragger"
-          style={{ marginBottom: 12 }}
+          style={{ marginBottom: 12, width: '100%' }}
         >
           <p className="ant-upload-drag-icon">
             <InboxOutlined />

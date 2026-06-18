@@ -16,7 +16,7 @@ import { getManualDraft, saveManualDraft, variablesMatch, isDateVariable, getTod
 import { readExcelFile, validateExcelData, generateExcelTemplate } from '../utils/excelHandler';
 import { saveTemplateToLibrary } from '../utils/templateStore';
 import { MAX_BATCH_ROWS } from '../utils/constants';
-import { saveAs } from 'file-saver';
+import { saveBlob } from '../utils/downloadFile';
 import type { TemplateData, BatchRow } from '../types';
 
 const { Content, Sider } = Layout;
@@ -181,15 +181,15 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
         const safeFirstVal = firstVal ? sanitizeFileName(firstVal) : '';
         const outName = safeFirstVal ? `${safeTemplateName}_${safeFirstVal}.docx` : `${safeTemplateName}.docx`;
         const variablesPairs = variables.map((name) => ({ name, value: row[name] || '' }));
-        generateSingleDocx(template.rawArrayBuffer, variablesPairs, outName);
-        setProgressText('生成完成'); setGenState('done');
+        const saved = await generateSingleDocx(template.rawArrayBuffer, variablesPairs, outName);
+        setProgressText(saved ? '生成完成' : ''); setGenState(saved ? 'done' : 'idle');
       } else {
-        await generateBatchDocx(template.rawArrayBuffer, variables, validRows, (current, total) => {
+        const saved = await generateBatchDocx(template.rawArrayBuffer, variables, validRows, (current, total) => {
           setProgress(Math.round((current / total) * 100));
           setProgressText(`正在生成 ${current} / ${total}`);
           if (current === total) setProgressText('正在打包 zip...');
         });
-        setProgressText('生成完成'); setGenState('done');
+        setProgressText(saved ? '生成完成' : ''); setGenState(saved ? 'done' : 'idle');
       }
     } catch (err) {
       setGenError(`生成失败: ${err instanceof Error ? err.message : '未知错误'}`);
@@ -217,10 +217,10 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
     return false;
   };
 
-  const handleDownloadExcelTemplate = () => {
+  const handleDownloadExcelTemplate = async () => {
     if (!template) return;
     const blob = generateExcelTemplate(template.variables);
-    saveAs(blob, `${template.name}_数据模板.xlsx`);
+    await saveBlob(blob, `${template.name}_数据模板.xlsx`);
   };
 
   const presets = useMemo(() => {
@@ -340,15 +340,16 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
       {contextHolder}
       <Sider 
         width={280} 
+        className="generate-template-sider"
         style={{ 
           background: 'transparent', 
           borderRight: '1px solid #f0f0f0', 
-          paddingRight: 16, 
-          overflow: 'auto',
+          overflowX: 'hidden',
+          overflowY: 'auto',
           flexShrink: 0 
         }}
       >
-        <Space direction="vertical" style={{ width: '100%' }} size={12}>
+        <Space direction="vertical" className="generate-template-stack" size={12}>
           <TemplateUpload
             template={template}
             onTemplateLoaded={onTemplateLoaded}

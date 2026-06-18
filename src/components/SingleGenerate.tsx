@@ -39,8 +39,8 @@ export default function SingleGenerate({ template }: Props) {
       }));
 
       const outName = `${template.name}.docx`;
-      generateSingleDocx(template.rawArrayBuffer, variables, outName);
-      setSuccess(true);
+      const saved = await generateSingleDocx(template.rawArrayBuffer, variables, outName);
+      setSuccess(saved);
     } catch (err) {
       if (err && typeof err === 'object' && 'errorFields' in err) {
         const fields = (err as { errorFields: { name: string[] }[] }).errorFields;

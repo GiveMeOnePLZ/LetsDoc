@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 import { getSavedTemplates, getSavedTemplate } from './templateStore';
+import { saveBlob } from './downloadFile';
 
 const APP_NAME = 'LetsDoc';
 
@@ -80,7 +80,7 @@ export async function exportTemplateLibrary(appVersion: string): Promise<void> {
 
   const blob = await zip.generateAsync({ type: 'blob' });
   const filename = `letsdoc-template-library-${formatDateForFilename(new Date())}.letsdoc`;
-  saveAs(blob, filename);
+  await saveBlob(blob, filename);
 }
 
 export async function parseTemplateBackup(file: File): Promise<ParsedBackup> {

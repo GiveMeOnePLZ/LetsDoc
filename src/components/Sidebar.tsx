@@ -7,6 +7,7 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import { APP_VERSION } from '../utils/constants';
+import logoUrl from '../assets/letsdoc-logo.png';
 import type { PageKey } from '../utils/router';
 
 const { Sider } = Layout;
@@ -41,13 +42,18 @@ export default function Sidebar({ currentPage, onNavigate }: Props) {
         zIndex: 100,
       }}
     >
-      <div style={{ padding: '20px 20px 12px', borderBottom: '1px solid #f0f0f0' }}>
-        <Text strong style={{ fontSize: 18, color: '#1677ff', display: 'block', lineHeight: 1.2 }}>
-          LetsDoc
-        </Text>
-        <Text type="secondary" style={{ fontSize: 11 }}>
-          文书模板生成器
-        </Text>
+      <div style={{ padding: '18px 20px 12px', borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src={logoUrl} alt="LetsDoc" style={{ width: 32, height: 32, flex: '0 0 auto' }} />
+          <div>
+            <Text strong style={{ fontSize: 18, color: '#1677ff', display: 'block', lineHeight: 1.2 }}>
+              LetsDoc
+            </Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              文书模板生成器
+            </Text>
+          </div>
+        </div>
       </div>
 
       <Menu

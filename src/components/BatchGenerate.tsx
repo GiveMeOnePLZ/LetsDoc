@@ -9,7 +9,7 @@ import {
   readExcelFile, validateExcelData, generateExcelTemplate, generateExampleExcel,
 } from '../utils/excelHandler';
 import { generateBatchDocx } from '../utils/docxGenerator';
-import { saveAs } from 'file-saver';
+import { saveBlob } from '../utils/downloadFile';
 import ManualBatchGenerate from './ManualBatchGenerate';
 import type { TemplateData, BatchRow } from '../types';
 import type { ValidationResult } from '../utils/excelHandler';
@@ -42,14 +42,14 @@ function ExcelImport({ template }: { template: TemplateData }) {
     setGenError(null);
   };
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
     const blob = generateExcelTemplate(template.variables);
-    saveAs(blob, `${template.name}_数据模板.xlsx`);
+    await saveBlob(blob, `${template.name}_数据模板.xlsx`);
   };
 
-  const handleDownloadExample = () => {
+  const handleDownloadExample = async () => {
     const blob = generateExampleExcel();
-    saveAs(blob, '示例数据.xlsx');
+    await saveBlob(blob, '示例数据.xlsx');
   };
 
   const handleExcelUpload = async (file: File) => {
@@ -85,7 +85,7 @@ function ExcelImport({ template }: { template: TemplateData }) {
     setProgressText('正在生成...');
     setGenError(null);
     try {
-      await generateBatchDocx(
+      const saved = await generateBatchDocx(
         template.rawArrayBuffer,
         template.variables,
         excelRows,
@@ -95,8 +95,8 @@ function ExcelImport({ template }: { template: TemplateData }) {
           if (current === total) setProgressText('正在打包 zip...');
         }
       );
-      setProgressText('生成完成');
-      setUploadState('done');
+      setProgressText(saved ? '生成完成' : '');
+      setUploadState(saved ? 'done' : 'validated');
     } catch (err) {
       setGenError(`批量生成失败: ${err instanceof Error ? err.message : '未知错误'}`);
       setUploadState('error');

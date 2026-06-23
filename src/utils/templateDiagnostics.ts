@@ -210,8 +210,8 @@ export function runDiagnostics(
         level: 'error',
         code: 'INVALID_VARIABLE_NAME',
         title: '存在不合法变量名',
-        message: `变量名「${v}」包含非法字符，只允许中文、英文、数字和下划线。`,
-        suggestion: `请改为合法的变量名，例如将「${v}」改为「${v.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_]/g, '_')}」。`,
+        message: `变量名「${v}」包含不支持的字符，不能使用花括号、换行或控制字符。`,
+        suggestion: '请移除花括号、换行或控制字符后重试。',
       });
     }
   }

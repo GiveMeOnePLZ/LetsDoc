@@ -7,10 +7,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test": "node --experimental-strip-types --test tests/variable-name.test.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "tauri:build:portable": "tauri build --no-bundle",
+    "tauri:package:portable": "powershell -ExecutionPolicy Bypass -File scripts/package-portable.ps1",
     "electron:dev": "node electron/dev.cjs",
     "electron:build": "npm run build && electron-builder --mac"
   },

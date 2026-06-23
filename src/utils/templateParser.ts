@@ -73,7 +73,7 @@ export function parseTemplate(arrayBuffer: ArrayBuffer): ParseResult {
   for (const v of allVars) {
     if (!VALID_VARIABLE_NAME.test(v)) {
       errors.push(
-        `变量名 "${v}" 包含非法字符，只允许中文、英文、数字和下划线。`
+        `变量名 "${v}" 包含不支持的字符，不能使用花括号、换行或控制字符。`
       );
     }
   }

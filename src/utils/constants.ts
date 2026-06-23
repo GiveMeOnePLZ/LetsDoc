@@ -2,7 +2,8 @@ export const APP_VERSION = 'v0.10.0';
 
 export const PLACEHOLDER_REGEX = /\{\{([^{}]+)\}\}/g;
 
-export const VALID_VARIABLE_NAME = /^[\u4e00-\u9fa5a-zA-Z0-9_]+$/;
+// Variable names may contain visible punctuation, but cannot contain delimiter braces or control characters.
+export const VALID_VARIABLE_NAME = /^[^{}\p{C}]+$/u;
 
 export const ILLEGAL_FILENAME_CHARS = /[\\/:*?"<>|]/g;
 

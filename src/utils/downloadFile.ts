@@ -42,6 +42,6 @@ export async function saveBlob(blob: Blob, fileName: string): Promise<boolean> {
     return true;
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(`保存文件失败：${detail}`);
+    throw new Error(`保存文件失败：${detail}`, { cause: err });
   }
 }

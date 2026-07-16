@@ -1,16 +1,12 @@
 import { Layout, Menu, Typography } from 'antd';
 import {
-  DashboardOutlined,
-  FormOutlined,
-  FolderOutlined,
-  CloudDownloadOutlined,
-  SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import { APP_VERSION } from '../utils/constants';
 import logoUrl from '../assets/letsdoc-logo.png';
 import type { PageKey } from '../utils/router';
+import { navigationItems } from '../navigation';
 
 const { Sider } = Layout;
 const { Text } = Typography;
@@ -21,14 +17,6 @@ interface Props {
   collapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
 }
-
-const menuItems = [
-  { key: 'dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
-  { key: 'generate', icon: <FormOutlined />, label: '文书生成' },
-  { key: 'templates', icon: <FolderOutlined />, label: '模板管理' },
-  { key: 'backup', icon: <CloudDownloadOutlined />, label: '模板库备份' },
-  { key: 'settings', icon: <SettingOutlined />, label: '设置' },
-];
 
 export default function Sidebar({ currentPage, onNavigate, collapsed, onCollapsedChange }: Props) {
   return (
@@ -64,7 +52,7 @@ export default function Sidebar({ currentPage, onNavigate, collapsed, onCollapse
         mode="inline"
         selectedKeys={[currentPage]}
         onClick={({ key }) => onNavigate(key as PageKey)}
-        items={menuItems}
+        items={navigationItems}
         style={{
           borderInlineEnd: 'none',
           flex: 1,

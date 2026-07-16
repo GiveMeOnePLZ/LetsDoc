@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
-  Layout, Typography, Button, Space, Card, Alert, Progress, Table, Input, Select,
+  Layout, Typography, Button, Space, Card, Alert, Progress, Table, Input, Select, Grid,
   Divider, Upload, message, Popover, Modal, Tag,
 } from 'antd';
 import {
   PlusOutlined, CopyOutlined, DeleteOutlined, RocketOutlined, WarningOutlined,
   AimOutlined, InboxOutlined, DownloadOutlined, UploadOutlined,
   SaveOutlined, CalendarOutlined, CloseOutlined, FolderOpenOutlined, FileTextOutlined,
-  SafetyCertificateOutlined,
+  SafetyCertificateOutlined, LeftOutlined, RightOutlined,
 } from '@ant-design/icons';
 import TemplateUpload from '../components/TemplateUpload';
 import TemplateDiagnostics from '../components/TemplateDiagnostics';
@@ -80,6 +80,10 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
   const [presetsVersion, setPresetsVersion] = useState(0);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  const [activeMobileRow, setActiveMobileRow] = useState(0);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const activeMobileRowIndex = Math.min(activeMobileRow, Math.max(0, rows.length - 1));
 
   useEffect(() => {
     if (!template) return;
@@ -105,6 +109,28 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
     setRows(fresh); setShowValidation(false); setGenState('idle'); setGenError(null);
     saveManualDraft(variables, fresh);
   }, [variables]);
+
+  const addMobileRow = () => {
+    const nextIndex = rows.length;
+    setRows((prev) => [...prev, createEmptyRow(variables)]);
+    setActiveMobileRow(nextIndex);
+  };
+
+  const copyMobileRow = () => {
+    const nextIndex = rows.length;
+    setRows((prev) => [...prev, { ...(prev[activeMobileRowIndex] || createEmptyRow(variables)) }]);
+    setActiveMobileRow(nextIndex);
+  };
+
+  const deleteMobileRow = () => {
+    if (rows.length <= 1) {
+      clearAll();
+      setActiveMobileRow(0);
+      return;
+    }
+    deleteRow(activeMobileRowIndex);
+    setActiveMobileRow(Math.max(0, activeMobileRowIndex - 1));
+  };
 
   const updateCell = useCallback((rowIndex: number, varName: string, value: string) => {
     setRows((prev) => {
@@ -407,10 +433,21 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
         )}
 
         {template ? (
+          <>
           <Card
             styles={{ body: { padding: 16 } }}
             className="soft-card generate-workbench"
           >
+            {isMobile ? (
+              <div className="mobile-workbench-toolbar">
+                <Upload accept=".xlsx" showUploadList={false} beforeUpload={handleExcelImport}>
+                  <Button icon={<UploadOutlined />} block>导入 Excel</Button>
+                </Upload>
+                <Button icon={<PlusOutlined />} onClick={addMobileRow}>新增一条</Button>
+                <Button type="text" icon={<DeleteOutlined />} onClick={() => { clearAll(); setActiveMobileRow(0); }}>清空</Button>
+                <Button type="text" onClick={handleValidate}>校验数据</Button>
+              </div>
+            ) : (
             <div className="generate-toolbar" style={{ marginBottom: 16 }}>
               <div className="generate-toolbar-left">
                 <Button icon={<PlusOutlined />} onClick={addRow}>新增一行</Button>
@@ -437,6 +474,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                 </Button>
               </div>
             </div>
+            )}
 
             <div className="generate-secondary-toolbar">
               <div className="generate-side-actions">
@@ -479,6 +517,59 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
               </Space>
             </div>
 
+            {isMobile ? (
+              <section className="mobile-record-editor" aria-label="文书数据填写">
+                <div className="mobile-record-editor-head">
+                  <Button
+                    type="text"
+                    icon={<LeftOutlined />}
+                    aria-label="上一条数据"
+                    disabled={activeMobileRowIndex === 0}
+                    onClick={() => setActiveMobileRow((index) => Math.max(0, index - 1))}
+                  />
+                  <strong>第 {activeMobileRowIndex + 1} 条，共 {rows.length} 条</strong>
+                  <Button
+                    type="text"
+                    icon={<RightOutlined />}
+                    aria-label="下一条数据"
+                    disabled={activeMobileRowIndex >= rows.length - 1}
+                    onClick={() => setActiveMobileRow((index) => Math.min(rows.length - 1, index + 1))}
+                  />
+                </div>
+                <div className="mobile-record-actions">
+                  <Button icon={<CopyOutlined />} onClick={copyMobileRow}>复制当前条</Button>
+                  <Button danger icon={<DeleteOutlined />} onClick={deleteMobileRow}>删除当前条</Button>
+                </div>
+                <div className="mobile-field-list">
+                  {variables.map((variable) => {
+                    const currentValue = String(rows[activeMobileRowIndex]?.[variable] || '');
+                    const fieldPresets = presets[variable] || [];
+                    return (
+                      <label className="mobile-field" key={variable}>
+                        <span>{variable}</span>
+                        <Input
+                          value={currentValue}
+                          placeholder={`填写${variable}`}
+                          onChange={(e) => updateCell(activeMobileRowIndex, variable, e.target.value)}
+                        />
+                        {fieldPresets.length > 0 && (
+                          <Select
+                            size="small"
+                            placeholder="选择常用值"
+                            value={undefined}
+                            options={fieldPresets.map((value) => ({ label: value, value }))}
+                            onChange={(value) => { if (value) handleSelectPreset(variable, value, activeMobileRowIndex); }}
+                          />
+                        )}
+                        {currentValue.trim() && !fieldPresets.includes(currentValue.trim()) && (
+                          <Button type="link" size="small" onClick={() => handleSavePreset(variable, currentValue)}>保存为常用值</Button>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : (
             <div ref={tableRef} className="generate-table-shell">
               <Table
                 size="small"
@@ -498,6 +589,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                 }}
               />
             </div>
+            )}
 
             {showValidation && (
               <div style={{ marginTop: 12 }}>
@@ -542,6 +634,19 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
               />
             )}
           </Card>
+          <div className="mobile-generate-dock">
+            <span>{validRowCount} 行有效</span>
+            <Button
+              type="primary"
+              icon={<RocketOutlined />}
+              loading={genState === 'generating'}
+              disabled={!canGenerate || genState === 'generating'}
+              onClick={handleGenerate}
+            >
+              {validRowCount <= 1 ? '生成文书' : `批量生成 ${validRowCount} 份`}
+            </Button>
+          </div>
+          </>
         ) : (
           <Card className="soft-card empty-template-card">
             <InboxOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />

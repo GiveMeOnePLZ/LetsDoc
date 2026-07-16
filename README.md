@@ -78,6 +78,7 @@ LetsDoc 1.0.0 是一个纯前端、本地处理的 Word 模板生成工具。通
 - 草稿、最近模板和常用值保存在 localStorage。
 - 清理浏览器数据、切换浏览器或更换电脑后，本地数据不会自动同步。
 - 可将模板库导出为 `.letsdoc` 文件备份；该文件包含模板原文，请妥善保存。
+- 网站当前不嵌入第三方流量跟踪脚本；可在腾讯云 EdgeOne 控制台查看聚合访问指标。
 
 ## 本地开发
 
@@ -113,13 +114,30 @@ npm run tauri:package:portable
 
 未签名程序可能触发 Windows SmartScreen 提示。
 
-## 部署网站
+## 网站部署
 
 LetsDoc 不需要后端或数据库。执行 `npm run build` 后，将 `dist/` 部署到任意静态网站服务即可，例如 Nginx、IIS、GitHub Pages、Cloudflare Pages、Netlify 或 Vercel。
 
 不建议直接双击 `dist/index.html`，应通过 HTTP 服务访问。详细步骤见 [部署指南](docs/deploy.md)。
 
-若网站部署在中国大陆服务器并绑定域名，请按实际情况完成 ICP 备案，并替换页面底部的备案号占位内容。
+### 腾讯云 EdgeOne Makers
+
+本项目已适配 EdgeOne Makers 的 Git 自动部署。在项目设置中使用以下构建配置：
+
+```text
+安装命令：npm ci
+构建命令：npm run build
+输出目录：dist
+生产分支：main
+```
+
+代码合并或推送到 `main` 后，EdgeOne 会自动构建并发布；也可以在部署记录中手动重新部署。
+
+网站页脚备案号为冀ICP备2026025713号。若使用其他域名或部署主体，请按实际备案信息调整。
+
+## 开源协作
+
+欢迎提交 Issue 或 Pull Request。请勿将真实文书、Excel 数据、个人信息或其他敏感文件提交到仓库。
 
 ## 技术栈
 

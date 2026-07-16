@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v0.10.0';
+export const APP_VERSION = 'v1.0.0';
 
 export const PLACEHOLDER_REGEX = /\{\{([^{}]+)\}\}/g;
 

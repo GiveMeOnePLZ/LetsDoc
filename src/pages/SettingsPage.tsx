@@ -44,7 +44,7 @@ export default function SettingsPage({ onTemplateCleared }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', minWidth: 0 }}>
+    <div className="page-fade-in" style={{ maxWidth: 640, margin: '0 auto', minWidth: 0 }}>
       {contextHolder}
       <Title level={4} style={{ marginBottom: 24 }}>设置</Title>
 
@@ -58,7 +58,7 @@ export default function SettingsPage({ onTemplateCleared }: Props) {
       </Card>
 
       <Card title="数据说明" style={{ marginBottom: 16, borderRadius: 12 }}>
-        <Space direction="vertical" size={8}>
+        <Space orientation="vertical" size={8}>
           <Text style={{ fontSize: 13, overflowWrap: 'anywhere' }}>
             本工具所有文件处理在浏览器本地完成，不会上传任何数据到服务器。
           </Text>
@@ -78,7 +78,7 @@ export default function SettingsPage({ onTemplateCleared }: Props) {
       </Card>
 
       <Card title="历史兼容" style={{ marginBottom: 16, borderRadius: 12 }}>
-        <Space direction="vertical" size={8}>
+        <Space orientation="vertical" size={8}>
           <Text style={{ fontSize: 13 }}>
             为兼容旧版本数据，以下存储 key 保留原有前缀：
           </Text>
@@ -95,7 +95,7 @@ export default function SettingsPage({ onTemplateCleared }: Props) {
       </Card>
 
       <Card title="数据管理" style={{ borderRadius: 12 }}>
-        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
           <div>
             <Button icon={<DeleteOutlined />} onClick={handleClearDrafts}>清空本地草稿</Button>
             <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4, overflowWrap: 'anywhere' }}>

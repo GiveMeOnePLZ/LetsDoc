@@ -5,6 +5,8 @@ import {
   FolderOutlined,
   CloudDownloadOutlined,
   SettingOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import { APP_VERSION } from '../utils/constants';
 import logoUrl from '../assets/letsdoc-logo.png';
@@ -16,6 +18,8 @@ const { Text } = Typography;
 interface Props {
   currentPage: PageKey;
   onNavigate: (page: PageKey) => void;
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
 const menuItems = [
@@ -26,10 +30,12 @@ const menuItems = [
   { key: 'settings', icon: <SettingOutlined />, label: '设置' },
 ];
 
-export default function Sidebar({ currentPage, onNavigate }: Props) {
+export default function Sidebar({ currentPage, onNavigate, collapsed, onCollapsedChange }: Props) {
   return (
     <Sider
       width={220}
+      collapsedWidth={76}
+      collapsed={collapsed}
       style={{
         background: '#fff',
         borderRight: '1px solid #f0f0f0',
@@ -42,18 +48,16 @@ export default function Sidebar({ currentPage, onNavigate }: Props) {
         zIndex: 100,
       }}
     >
-      <div style={{ padding: '18px 20px 12px', borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src={logoUrl} alt="LetsDoc" style={{ width: 32, height: 32, flex: '0 0 auto' }} />
-          <div>
-            <Text strong style={{ fontSize: 18, color: '#1677ff', display: 'block', lineHeight: 1.2 }}>
-              LetsDoc
-            </Text>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              文书模板生成器
-            </Text>
-          </div>
+      <div className="app-sidebar-brand">
+        <div className="app-logo-mark">
+          <img src={logoUrl} alt="LetsDoc" />
         </div>
+        {!collapsed && (
+          <div className="app-brand-copy">
+            <Text strong className="app-brand-name">LetsDoc</Text>
+            <Text type="secondary" className="app-brand-subtitle">文书模板生成器</Text>
+          </div>
+        )}
       </div>
 
       <Menu
@@ -68,10 +72,17 @@ export default function Sidebar({ currentPage, onNavigate }: Props) {
         }}
       />
 
-      <div style={{ padding: '12px 20px', borderTop: '1px solid #f0f0f0' }}>
-        <Text type="secondary" style={{ fontSize: 11 }}>
-          {APP_VERSION}
-        </Text>
+      <div className="app-sidebar-footer">
+        <button
+          type="button"
+          className="sidebar-collapse-button"
+          onClick={() => onCollapsedChange(!collapsed)}
+          aria-label={collapsed ? '展开侧边栏' : '折叠侧边栏'}
+          title={collapsed ? '展开侧边栏' : '折叠侧边栏'}
+        >
+          {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+          {!collapsed && <span aria-hidden="true">{APP_VERSION}</span>}
+        </button>
       </div>
     </Sider>
   );

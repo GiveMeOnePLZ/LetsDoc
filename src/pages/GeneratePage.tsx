@@ -1,12 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Layout, Typography, Button, Space, Card, Alert, Progress, Table, Input, Select,
-  Divider, Upload, message, Popover,
+  Divider, Upload, message, Popover, Modal, Tag,
 } from 'antd';
 import {
   PlusOutlined, CopyOutlined, DeleteOutlined, RocketOutlined, WarningOutlined,
   AimOutlined, InboxOutlined, DownloadOutlined, UploadOutlined,
-  SaveOutlined, CalendarOutlined, CloseOutlined,
+  SaveOutlined, CalendarOutlined, CloseOutlined, FolderOpenOutlined, FileTextOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import TemplateUpload from '../components/TemplateUpload';
 import TemplateDiagnostics from '../components/TemplateDiagnostics';
@@ -19,8 +20,8 @@ import { MAX_BATCH_ROWS } from '../utils/constants';
 import { saveBlob } from '../utils/downloadFile';
 import type { TemplateData, BatchRow } from '../types';
 
-const { Content, Sider } = Layout;
-const { Text } = Typography;
+const { Content } = Layout;
+const { Text, Title } = Typography;
 
 interface Props {
   template: TemplateData | null;
@@ -71,7 +72,6 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const [genError, setGenError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [draftRestored, setDraftRestored] = useState(initData.restored);
-  const [diagnosticsHasError, setDiagnosticsHasError] = useState(false);
   const [fillColumn, setFillColumn] = useState<string | undefined>(undefined);
   const [fillValue, setFillValue] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
@@ -79,6 +79,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [libraryRefreshKey, setLibraryRefreshKey] = useState(0);
   const [presetsVersion, setPresetsVersion] = useState(0);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
 
   useEffect(() => {
     if (!template) return;
@@ -164,7 +165,6 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const validation = validateRows(rows, variables);
   const canGenerate = validation.rowErrors.length === 0 && validation.valid > 0;
   const validRowCount = rows.filter((row) => variables.some((v) => row[v] && row[v].trim() !== '')).length;
-
   const handleValidate = () => setShowValidation(true);
 
   const handleGenerate = async () => {
@@ -336,106 +336,63 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const dataSource = rows.map((row, i) => ({ key: i, ...row })) as Array<Record<string, unknown> & { key: number }>;
 
   return (
-    <Layout style={{ background: 'transparent', height: '100%', minWidth: 0 }}>
+    <Layout className="generate-page page-fade-in" style={{ background: 'transparent', minWidth: 0 }}>
       {contextHolder}
-      <Sider 
-        width={280} 
-        className="generate-template-sider"
-        style={{ 
-          background: 'transparent', 
-          borderRight: '1px solid #f0f0f0', 
-          overflowX: 'hidden',
-          overflowY: 'auto',
-          flexShrink: 0 
-        }}
+      <Modal
+        title="选择模板"
+        open={templatePickerOpen}
+        onCancel={() => setTemplatePickerOpen(false)}
+        footer={null}
+        width={760}
+        destroyOnHidden
       >
-        <Space direction="vertical" className="generate-template-stack" size={12}>
+        <div className="template-picker-modal">
           <TemplateUpload
-            template={template}
-            onTemplateLoaded={onTemplateLoaded}
-            onTemplateCleared={onTemplateCleared}
+            template={null}
+            onTemplateLoaded={(t) => {
+              onTemplateLoaded(t);
+              setTemplatePickerOpen(false);
+            }}
+            onTemplateCleared={() => {
+              onTemplateCleared();
+              setTemplatePickerOpen(false);
+            }}
             onTemplateSaved={onTemplateSaved}
           />
-          {template && (
-            <TemplateDiagnostics
-              template={template}
-              onErrorStateChange={setDiagnosticsHasError}
-            />
-          )}
-          {template && (
-            <Card 
-              size="small" 
-              title="快捷操作" 
-              style={{ borderRadius: 8 }}
-              styles={{ body: { padding: 12 } }}
-            >
-              <div className="generate-side-actions">
-                <Button 
-                  block 
-                  icon={<SaveOutlined />} 
-                  onClick={() => {
-                    if (template) {
-                      const blob = new Blob([template.rawArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-                      saveTemplateToLibrary({ name: template.name, originalFileName: template.fileName, variables: template.variables, templateBlob: blob });
-                      messageApi.success('模板已保存到本地模板库');
-                      onTemplateSaved?.();
-                    }
-                  }}
-                  style={{ textAlign: 'left' }}
-                >
-                  保存到本地模板库
-                </Button>
-                <Button 
-                  block 
-                  icon={<DeleteOutlined />} 
-                  onClick={clearAll}
-                  style={{ textAlign: 'left' }}
-                >
-                  清空录入数据
-                </Button>
-                <Button 
-                  block 
-                  icon={<DownloadOutlined />} 
-                  onClick={handleDownloadExcelTemplate}
-                  style={{ textAlign: 'left' }}
-                >
-                  下载 Excel 模板
-                </Button>
-                <Upload accept=".xlsx" showUploadList={false} beforeUpload={handleExcelImport}>
-                  <Button icon={<UploadOutlined />} style={{ width: 237, textAlign: 'left' }}>导入 Excel</Button>
-                </Upload>
-              </div>
-            </Card>
-          )}
-          {!template && (
-            <TemplateLibrary
-              key={libraryRefreshKey}
-              onTemplateSelected={(t) => {
-                onTemplateLoaded(t);
-                setLibraryRefreshKey((k) => k + 1);
-              }}
-              onTemplateDeleted={() => {}}
-              currentTemplateId={undefined}
-            />
-          )}
-        </Space>
-      </Sider>
-
-      <Content style={{ overflow: 'auto', padding: '24px 32px', minWidth: 0 }}>
-        <div style={{ marginBottom: 20 }}>
-          <Typography.Title level={4} style={{ marginBottom: 8 }}>文书生成</Typography.Title>
-          <Text type="secondary" style={{ display: 'block', overflowWrap: 'anywhere' }}>
-            填写变量数据，系统会根据有效行数自动生成单份或批量文书。
-          </Text>
-        </div>
-
-        {diagnosticsHasError && template && (
-          <Alert 
-            type="warning" 
-            showIcon 
-            message="模板体检存在错误，生成结果可能不正确，请先检查模板。" 
-            style={{ marginBottom: 16 }} 
+          <TemplateLibrary
+            key={libraryRefreshKey}
+            onTemplateSelected={(t) => {
+              onTemplateLoaded(t);
+              setLibraryRefreshKey((k) => k + 1);
+              setTemplatePickerOpen(false);
+            }}
+            onTemplateDeleted={() => {}}
+            currentTemplateId={template?.id}
           />
+        </div>
+      </Modal>
+
+      <Content style={{ minWidth: 0 }}>
+        <section className="generate-page-header">
+          <Title level={3}>文书生成</Title>
+          <Tag color="blue" className="trust-tag">
+            <SafetyCertificateOutlined /> 本地处理
+          </Tag>
+        </section>
+
+        {template && (
+          <section className="template-context-bar">
+            <div className="template-context-title">
+              <FileTextOutlined />
+              <Text strong ellipsis>{template.name}</Text>
+              <Text type="secondary">{template.variables.length} 个变量</Text>
+            </div>
+            <Button icon={<FolderOpenOutlined />} onClick={() => setTemplatePickerOpen(true)}>更换模板</Button>
+          </section>
+        )}
+
+        {template && (
+          <TemplateDiagnostics template={template} />
         )}
 
         {draftRestored && (
@@ -452,12 +409,15 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
         {template ? (
           <Card
             styles={{ body: { padding: 16 } }}
-            style={{ borderRadius: 12 }}
+            className="soft-card generate-workbench"
           >
             <div className="generate-toolbar" style={{ marginBottom: 16 }}>
               <div className="generate-toolbar-left">
                 <Button icon={<PlusOutlined />} onClick={addRow}>新增一行</Button>
                 <Button icon={<CopyOutlined />} onClick={copyLastRow}>复制上一行</Button>
+                <Upload accept=".xlsx" showUploadList={false} beforeUpload={handleExcelImport}>
+                  <Button icon={<UploadOutlined />}>导入 Excel</Button>
+                </Upload>
                 <Button icon={<DeleteOutlined />} onClick={clearAll}>清空数据</Button>
                 <Button onClick={handleValidate}>校验数据</Button>
                 {showValidation && validation.rowErrors.length > 0 && (
@@ -465,6 +425,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                 )}
               </div>
               <div className="generate-toolbar-right">
+                <Text type="secondary">{validRowCount} 行有效</Text>
                 <Button
                   type="primary"
                   icon={<RocketOutlined />}
@@ -472,40 +433,58 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                   disabled={!canGenerate || genState === 'generating'}
                   onClick={handleGenerate}
                 >
-                  {validRowCount === 0 ? '生成文书' : validRowCount === 1 ? '生成 1 份文书' : `批量生成（${validRowCount} 份）`}
+                  {validRowCount <= 1 ? '生成文书' : `批量生成 ${validRowCount} 份`}
                 </Button>
               </div>
             </div>
 
-            <Divider plain style={{ margin: '8px 0 12px' }}>列填充</Divider>
-            <div className="generate-side-actions" style={{ marginBottom: 16 }}>
-              <Select
-                placeholder="选择变量列"
-                style={{ width: 150 }}
-                value={fillColumn}
-                onChange={setFillColumn}
-                options={variables.map((v) => ({ label: v, value: v }))}
-                allowClear
-              />
-              <Input
-                placeholder="输入要填充的值"
-                value={fillValue}
-                onChange={(e) => setFillValue(e.target.value)}
-                style={{ width: 200 }}
-                onPressEnter={handleFillColumn}
-              />
-              {fillColumn && isDateVariable(fillColumn) && (
-                <Button icon={<CalendarOutlined />} onClick={handleFillToday}>填入今天</Button>
-              )}
-              <Button onClick={handleFillColumn}>填充到全部行</Button>
+            <div className="generate-secondary-toolbar">
+              <div className="generate-side-actions">
+                <Text type="secondary">列填充</Text>
+                <Select
+                  placeholder="选择变量列"
+                  style={{ width: 150 }}
+                  value={fillColumn}
+                  onChange={setFillColumn}
+                  options={variables.map((v) => ({ label: v, value: v }))}
+                  allowClear
+                />
+                <Input
+                  placeholder="输入要填充的值"
+                  value={fillValue}
+                  onChange={(e) => setFillValue(e.target.value)}
+                  style={{ width: 200 }}
+                  onPressEnter={handleFillColumn}
+                />
+                {fillColumn && isDateVariable(fillColumn) && (
+                  <Button icon={<CalendarOutlined />} onClick={handleFillToday}>填入今天</Button>
+                )}
+                <Button onClick={handleFillColumn}>填充到全部行</Button>
+              </div>
+              <Space size={4} wrap>
+                <Button
+                  type="text"
+                  icon={<SaveOutlined />}
+                  onClick={async () => {
+                    const blob = new Blob([template.rawArrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                    await saveTemplateToLibrary({ name: template.name, originalFileName: template.fileName, variables: template.variables, templateBlob: blob });
+                    messageApi.success('模板已保存到本地模板库');
+                    onTemplateSaved?.();
+                  }}
+                >
+                  保存模板
+                </Button>
+                <Button type="text" icon={<DownloadOutlined />} onClick={handleDownloadExcelTemplate}>Excel 模板</Button>
+                <Button type="text" danger onClick={onTemplateCleared}>移除模板</Button>
+              </Space>
             </div>
 
-            <div ref={tableRef} style={{ minHeight: 200 }}>
+            <div ref={tableRef} className="generate-table-shell">
               <Table
                 size="small"
                 bordered
                 pagination={false}
-                scroll={{ x: true, y: 'calc(100vh - 500px)' }}
+                scroll={{ x: true }}
                 dataSource={dataSource}
                 columns={columns}
                 rowClassName={(_, index) => {
@@ -564,12 +543,15 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
             )}
           </Card>
         ) : (
-          <Card style={{ borderRadius: 12, textAlign: 'center', padding: '60px 0' }}>
+          <Card className="soft-card empty-template-card">
             <InboxOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
             <Typography.Title level={5} style={{ marginBottom: 8 }}>请先选择模板</Typography.Title>
             <div>
               <Text type="secondary">上传 .docx 模板或从本地模板库选择模板后，即可在这里填写变量并生成文书。</Text>
             </div>
+            <Button type="primary" icon={<FolderOpenOutlined />} style={{ marginTop: 18 }} onClick={() => setTemplatePickerOpen(true)}>
+              选择模板
+            </Button>
           </Card>
         )}
       </Content>

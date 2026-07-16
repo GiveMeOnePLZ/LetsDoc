@@ -107,6 +107,10 @@ export default function TemplateDiagnostics({ template, onErrorStateChange }: Pr
     return null;
   }
 
+  if (!diagnostics.hasError && !diagnostics.hasWarning) {
+    return null;
+  }
+
   const overallLevel = diagnostics.hasError ? 'error' : diagnostics.hasWarning ? 'warning' : 'success';
   const overallMessage = diagnostics.hasError
     ? '模板存在错误，可能无法正常生成'
@@ -191,12 +195,6 @@ export default function TemplateDiagnostics({ template, onErrorStateChange }: Pr
         />
       )}
 
-      {diagnostics.checks.length === 1 && diagnostics.checks[0].code === 'ALL_CLEAR' && (
-        <div style={{ textAlign: 'center', padding: '8px 0', color: '#52c41a' }}>
-          <CheckCircleOutlined style={{ marginRight: 8 }} />
-          模板检查完毕，未发现问题
-        </div>
-      )}
     </Card>
   );
 }

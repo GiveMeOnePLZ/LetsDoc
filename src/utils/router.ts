@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 export type PageKey = 'dashboard' | 'generate' | 'templates' | 'backup' | 'settings';
 
 const PAGE_MAP: Record<string, PageKey> = {
-  '': 'generate',
+  '': 'dashboard',
   dashboard: 'dashboard',
   generate: 'generate',
   templates: 'templates',
@@ -11,7 +11,7 @@ const PAGE_MAP: Record<string, PageKey> = {
   settings: 'settings',
 };
 
-const DEFAULT_PAGE: PageKey = 'generate';
+const DEFAULT_PAGE: PageKey = 'dashboard';
 
 export function getPageFromHash(): PageKey {
   const hash = window.location.hash.replace(/^#\/?/, '');

@@ -1,19 +1,28 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Layout, Typography, Card, List, Button, Space, Input, Tag, Popconfirm, Empty, message,
+  Typography, Card, Button, Space, Input, Tag, Popconfirm, Empty, message, Dropdown, Row, Col, Modal,
 } from 'antd';
 import {
-  SearchOutlined, EditOutlined, DeleteOutlined, FileTextOutlined,
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  FileTextOutlined,
+  MoreOutlined,
+  ReloadOutlined,
+  UploadOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import {
   getSavedTemplates, getSavedTemplate, deleteSavedTemplate, renameSavedTemplate,
 } from '../utils/templateStore';
 import { setHash } from '../utils/router';
+import { exportTemplateLibrary, importTemplateBackup, parseTemplateBackup } from '../utils/templateBackup';
+import { saveTemplateToLibrary } from '../utils/templateStore';
+import { APP_VERSION } from '../utils/constants';
 import type { SavedTemplateSummary } from '../utils/templateStore';
 import type { TemplateData } from '../types';
 
-const { Content, Sider } = Layout;
-const { Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 interface Props {
   template: TemplateData | null;
@@ -23,12 +32,11 @@ interface Props {
 export default function TemplateManagePage({ template: currentTemplate, onTemplateLoaded }: Props) {
   const [templates, setTemplates] = useState<SavedTemplateSummary[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [searchText, setSearchText] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
-  const didLoadRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
@@ -43,26 +51,20 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
   }, [messageApi]);
 
   useEffect(() => {
-    if (didLoadRef.current) return;
-    didLoadRef.current = true;
-    loadTemplates();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void Promise.resolve().then(loadTemplates);
+  }, [loadTemplates]);
 
   const filtered = templates.filter((t) =>
     searchText === '' || t.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const selected = templates.find((t) => t.id === selectedId) || null;
-
-  const handleSelect = async (id: string) => {
-    setSelectedId(id);
-    setEditingId(null);
-  };
-
   const handleLoadTemplate = async (id: string) => {
     const full = await getSavedTemplate(id);
-    if (!full) { messageApi.error('模板数据不存在'); return; }
+    if (!full) {
+      messageApi.error('模板数据不存在');
+      return;
+    }
+
     const arrayBuffer = await full.templateBlob.arrayBuffer();
     onTemplateLoaded({
       id: full.id,
@@ -77,202 +79,173 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
   };
 
   const handleRename = async (id: string) => {
-    if (!editName.trim()) { messageApi.warning('名称不能为空'); return; }
+    if (!editName.trim()) {
+      messageApi.warning('名称不能为空');
+      return;
+    }
     try {
       await renameSavedTemplate(id, editName.trim());
       setEditingId(null);
       await loadTemplates();
       messageApi.success('重命名成功');
-    } catch { messageApi.error('重命名失败'); }
+    } catch {
+      messageApi.error('重命名失败');
+    }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await deleteSavedTemplate(id);
-      if (selectedId === id) setSelectedId(null);
       await loadTemplates();
       messageApi.success('删除成功');
-    } catch { messageApi.error('删除失败'); }
+    } catch {
+      messageApi.error('删除失败');
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportTemplateLibrary(APP_VERSION);
+      messageApi.success('模板库导出成功');
+    } catch (err) {
+      messageApi.error(err instanceof Error ? err.message : '导出失败');
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = await parseTemplateBackup(file);
+      const result = await importTemplateBackup(parsed, saveTemplateToLibrary);
+      messageApi.success(`导入完成：成功 ${result.imported} 个，跳过 ${result.skipped} 个`);
+      await loadTemplates();
+    } catch (err) {
+      messageApi.error(err instanceof Error ? err.message : '导入失败');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const formatDate = (ts: number) => new Date(ts).toLocaleString('zh-CN', {
-    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   return (
-    <Layout style={{ background: 'transparent', height: '100%', minWidth: 0 }}>
+    <div className="templates-page page-fade-in">
       {contextHolder}
-      <Sider
-        width={340}
-        className="template-manage-sider"
-        style={{
-          background: 'transparent',
-          borderRight: '1px solid #f0f0f0',
-          paddingRight: 16,
-          overflowX: 'hidden',
-          overflowY: 'auto',
-          flexShrink: 0
-        }}
-      >
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+      <input ref={fileInputRef} type="file" accept=".letsdoc" style={{ display: 'none' }} onChange={handleImport} />
+
+      <section className="page-heading">
+        <div>
+          <Title level={3}>模板库</Title>
+          <Paragraph>管理常用 Word 模板。模板保存在当前浏览器 IndexedDB 中，不会上传服务器。</Paragraph>
+        </div>
+        <Space wrap>
+          <Button icon={<ReloadOutlined />} onClick={loadTemplates} loading={loading}>刷新</Button>
+          <Button icon={<UploadOutlined />} onClick={() => fileInputRef.current?.click()}>导入</Button>
+          <Button icon={<DownloadOutlined />} onClick={handleExport} disabled={templates.length === 0}>导出</Button>
+        </Space>
+      </section>
+
+      <Card className="soft-card template-toolbar-card">
+        <div className="template-toolbar">
           <Input
-            placeholder="搜索模板..."
-            prefix={<SearchOutlined style={{ marginLeft: 8 }} />}
+            placeholder="搜索模板"
+            prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            style={{ width: 300, textAlign: 'left' }}
           />
+          <Text type="secondary">共 {templates.length} 个模板</Text>
         </div>
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 12, marginLeft: 20 }}>共 {templates.length} 个模板</Text>
-          <Button size="small" onClick={loadTemplates} loading={loading} style={{ marginRight: 20 }}>刷新</Button>
-        </div>
-        {filtered.length === 0 ? (
-          <Empty description="暂无模板" style={{ marginTop: 40 }} />
-        ) : (
-          <List
-            loading={loading}
-            dataSource={filtered}
-            renderItem={(item) => (
-              <List.Item
-                style={{
-                  padding: '12px',
-                  cursor: 'pointer',
-                  borderRadius: 8,
-                  background: selectedId === item.id ? '#e6f4ff' : 'transparent',
-                  border: selectedId === item.id ? '1px solid #91caff' : '1px solid transparent',
-                  marginBottom: 8,
-                }}
-                onClick={() => handleSelect(item.id)}
-              >
-                <List.Item.Meta
-                  className="template-list-meta"
-                  avatar={<FileTextOutlined style={{ fontSize: 20, color: '#1677ff', marginTop: 4 }} />}
-                  title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Text strong style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                        {item.name}
-                      </Text>
-                      {currentTemplate?.id === item.id && <Tag color="blue" style={{ fontSize: 11, flexShrink: 0 }}>当前</Tag>}
-                    </div>
-                  }
-                  description={
-                    <div style={{ overflow: 'hidden' }}>
-                      <Text type="secondary" style={{ fontSize: 11, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {item.originalFileName}
-                      </Text>
-                      <div style={{ marginTop: 4 }}>
-                        <Text type="secondary" style={{ fontSize: 11, marginRight: 12 }}>{item.variables.length} 个变量</Text>
-                        <Text type="secondary" style={{ fontSize: 11 }}>{formatDate(item.updatedAt)}</Text>
-                      </div>
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        )}
-      </Sider>
+      </Card>
 
-      <Content style={{ overflow: 'auto', padding: '24px 32px', minWidth: 0 }}>
-        {selected ? (
-          <Card
-            title={
-              <Space>
-                <FileTextOutlined />
-                <span className="text-ellipsis" style={{ maxWidth: 300 }}>{selected.name}</span>
-              </Space>
-            }
-            extra={
-              <Space>
-                <Button type="primary" size="small" onClick={() => handleLoadTemplate(selected.id)}>
-                  设为当前模板
-                </Button>
-                <Button size="small" onClick={() => setHash('generate')}>
-                  进入文书生成
-                </Button>
-              </Space>
-            }
-            style={{ borderRadius: 12 }}
-          >
-            <Space direction="vertical" style={{ width: '100%' }} size={16}>
-              <div>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>模板名称</Text>
-                {editingId === selected.id ? (
-                  <Space>
-                    <Input
-                      size="small"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      onPressEnter={() => handleRename(selected.id)}
-                      style={{ width: 200 }}
-                      autoFocus
-                    />
-                    <Button size="small" type="primary" onClick={() => handleRename(selected.id)}>保存</Button>
-                    <Button size="small" onClick={() => setEditingId(null)}>取消</Button>
-                  </Space>
-                ) : (
-                  <Space>
-                    <Text strong className="text-ellipsis" style={{ maxWidth: '70%' }}>{selected.name}</Text>
-                    <Button type="text" size="small" icon={<EditOutlined />} onClick={() => { setEditingId(selected.id); setEditName(selected.name); }} />
-                  </Space>
-                )}
-              </div>
-
-              <div>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>原文件名</Text>
-                <Text className="text-ellipsis" style={{ display: 'block' }}>{selected.originalFileName}</Text>
-              </div>
-
-              <div>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>变量清单（{selected.variables.length} 个）</Text>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {selected.variables.map((v) => (
-                    <Tag
-                      key={v}
-                      color="blue"
-                      style={{
-                        maxWidth: 150,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {`{{${v}}}`}
-                    </Tag>
-                  ))}
+      {filtered.length === 0 ? (
+        <Card className="soft-card empty-template-card">
+          <Empty description="暂无模板" />
+        </Card>
+      ) : (
+        <Row gutter={[16, 16]}>
+          {filtered.map((item) => (
+            <Col key={item.id} xs={24} md={12} xl={8}>
+              <Card className={`template-tile soft-card ${currentTemplate?.id === item.id ? 'is-current' : ''}`}>
+                <div className="template-tile-head">
+                  <div className="template-tile-icon">
+                    <FileTextOutlined />
+                  </div>
+                  <Dropdown
+                    trigger={['click']}
+                    menu={{
+                      items: [
+                        { key: 'rename', label: '重命名', icon: <EditOutlined /> },
+                        { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
+                      ],
+                      onClick: ({ key }) => {
+                        if (key === 'rename') {
+                          setEditingId(item.id);
+                          setEditName(item.name);
+                        } else if (key === 'delete') {
+                          Modal.confirm({
+                            title: '确认删除此模板？',
+                            content: item.name,
+                            okText: '确认',
+                            cancelText: '取消',
+                            okType: 'danger',
+                            onOk: () => handleDelete(item.id),
+                          });
+                        }
+                      },
+                    }}
+                  >
+                    <Button type="text" icon={<MoreOutlined />} />
+                  </Dropdown>
                 </div>
-              </div>
 
-              <div>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>更新时间</Text>
-                <Text>{formatDate(selected.updatedAt)}</Text>
-              </div>
+                {editingId === item.id ? (
+                  <Space.Compact block>
+                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} onPressEnter={() => handleRename(item.id)} autoFocus />
+                    <Button type="primary" onClick={() => handleRename(item.id)}>保存</Button>
+                    <Button onClick={() => setEditingId(null)}>取消</Button>
+                  </Space.Compact>
+                ) : (
+                  <Title level={5} className="template-tile-title">{item.name}</Title>
+                )}
 
-              <div>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>文件大小</Text>
-                <Text>{selected.size < 1024 ? `${selected.size} B` : selected.size < 1048576 ? `${(selected.size / 1024).toFixed(1)} KB` : `${(selected.size / 1048576).toFixed(1)} MB`}</Text>
-              </div>
-
-              <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16, marginTop: 8 }}>
-                <Popconfirm
-                  title="确认删除此模板？"
-                  onConfirm={() => handleDelete(selected.id)}
-                  okText="确认"
-                  cancelText="取消"
-                >
-                  <Button icon={<DeleteOutlined />} danger>删除模板</Button>
-                </Popconfirm>
-              </div>
-            </Space>
-          </Card>
-        ) : (
-          <Card style={{ borderRadius: 12, textAlign: 'center', padding: '60px 0' }}>
-            <Empty description="请选择左侧模板查看详情" />
-          </Card>
-        )}
-      </Content>
-    </Layout>
+                <Text type="secondary" className="template-tile-file">{item.originalFileName}</Text>
+                <div className="template-tile-meta">
+                  <span>{item.variables.length} 个变量</span>
+                  <span>{formatSize(item.size)}</span>
+                  <span>{formatDate(item.updatedAt)}</span>
+                </div>
+                <div className="template-library-tags">
+                  {item.variables.slice(0, 5).map((v) => (
+                    <Tag key={v} color="blue">{`{{${v}}}`}</Tag>
+                  ))}
+                  {item.variables.length > 5 && <Tag>+{item.variables.length - 5}</Tag>}
+                </div>
+                <div className="template-tile-actions">
+                  <Button type="primary" block onClick={() => handleLoadTemplate(item.id)}>
+                    {currentTemplate?.id === item.id ? '继续使用' : '使用模板'}
+                  </Button>
+                  <Popconfirm title="确认删除此模板？" onConfirm={() => handleDelete(item.id)} okText="确认" cancelText="取消">
+                    <Button danger icon={<DeleteOutlined />} />
+                  </Popconfirm>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
+    </div>
   );
 }

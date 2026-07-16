@@ -1,20 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import {
-  Card, List, Button, Space, Typography, Alert, Modal, Input, Tag, Popconfirm, message,
-  Descriptions,
-} from 'antd';
-import {
-  FolderOutlined, DeleteOutlined, EditOutlined, ReloadOutlined, ExclamationCircleOutlined,
-  ExportOutlined, ImportOutlined,
-} from '@ant-design/icons';
-import {
-  getSavedTemplates, getSavedTemplate, deleteSavedTemplate, renameSavedTemplate,
-  clearTemplateLibrary, saveTemplateToLibrary,
-} from '../utils/templateStore';
-import { exportTemplateLibrary, parseTemplateBackup, importTemplateBackup } from '../utils/templateBackup';
-import { APP_VERSION } from '../utils/constants';
+import { useEffect, useState } from 'react';
+import { Alert, Button, Card, Empty, Input, List, message, Space, Tag, Typography } from 'antd';
+import { FileTextOutlined, SearchOutlined } from '@ant-design/icons';
+import { getSavedTemplates, getSavedTemplate } from '../utils/templateStore';
 import type { SavedTemplateSummary } from '../utils/templateStore';
-import type { LetsDocBackupManifest } from '../utils/templateBackup';
 import type { TemplateData } from '../types';
 
 const { Text } = Typography;
@@ -25,46 +13,22 @@ interface Props {
   currentTemplateId?: string;
 }
 
-export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted, currentTemplateId }: Props) {
+export default function TemplateLibrary({ onTemplateSelected, currentTemplateId }: Props) {
   const [templates, setTemplates] = useState<SavedTemplateSummary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
-  const [importing, setImporting] = useState(false);
-  const [importPreview, setImportPreview] = useState<{
-    manifest: LetsDocBackupManifest;
-    conflictCount: number;
-    newCount: number;
-  } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const loadTemplates = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await getSavedTemplates();
-      return list.sort((a, b) => b.updatedAt - a.updatedAt);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '读取本地模板库失败');
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      const templates = await loadTemplates();
-      if (!cancelled) {
-        setTemplates(templates);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, []);
+    getSavedTemplates()
+      .then((list) => setTemplates(list.sort((a, b) => b.updatedAt - a.updatedAt)))
+      .catch((err) => messageApi.error(err instanceof Error ? err.message : '读取本地模板库失败'))
+      .finally(() => setLoading(false));
+  }, [messageApi]);
+
+  const filtered = templates.filter((template) =>
+    searchText === '' || template.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const handleSelect = async (template: SavedTemplateSummary) => {
     try {
@@ -75,415 +39,74 @@ export default function TemplateLibrary({ onTemplateSelected, onTemplateDeleted,
       }
 
       const arrayBuffer = await fullTemplate.templateBlob.arrayBuffer();
-      const templateData: TemplateData = {
+      onTemplateSelected({
         id: fullTemplate.id,
         name: fullTemplate.name,
         fileName: fullTemplate.originalFileName,
         variables: fullTemplate.variables,
         rawArrayBuffer: arrayBuffer,
         createdAt: fullTemplate.createdAt,
-      };
-
-      onTemplateSelected(templateData);
-      messageApi.success(`已加载模板：${fullTemplate.name}`);
+      });
     } catch (err) {
       messageApi.error(err instanceof Error ? err.message : '加载模板失败');
     }
   };
 
-  const handleRename = async (id: string) => {
-    if (!editName.trim()) {
-      messageApi.warning('模板名称不能为空');
-      return;
-    }
-
-    try {
-      await renameSavedTemplate(id, editName.trim());
-      setEditingId(null);
-      await loadTemplates();
-      messageApi.success('重命名成功');
-    } catch (err) {
-      messageApi.error(err instanceof Error ? err.message : '重命名失败');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteSavedTemplate(id);
-      const templates = await loadTemplates();
-      setTemplates(templates);
-
-      if (currentTemplateId === id && onTemplateDeleted) {
-        onTemplateDeleted(id);
-        messageApi.info('已删除当前使用的模板，模板仍可继续使用直到刷新页面');
-      } else {
-        messageApi.success('删除成功');
-      }
-    } catch (err) {
-      messageApi.error(err instanceof Error ? err.message : '删除失败');
-    }
-  };
-
-  const handleClearAll = () => {
-    Modal.confirm({
-      title: '确认清空模板库',
-      icon: <ExclamationCircleOutlined />,
-      content: '确定要清空本地模板库吗？此操作不可恢复。',
-      okText: '确认清空',
-      okType: 'danger',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          await clearTemplateLibrary();
-          const templates = await loadTemplates();
-          setTemplates(templates);
-
-          if (currentTemplateId && onTemplateDeleted) {
-            onTemplateDeleted(currentTemplateId);
-            messageApi.info('模板库已清空，当前使用的模板仍可继续使用直到刷新页面');
-          } else {
-            messageApi.success('模板库已清空');
-          }
-        } catch (err) {
-          messageApi.error(err instanceof Error ? err.message : '清空失败');
-        }
-      },
-    });
-  };
-
-  const handleExport = async () => {
-    try {
-      await exportTemplateLibrary(APP_VERSION);
-      messageApi.success('模板库导出成功');
-    } catch (err) {
-      messageApi.error(err instanceof Error ? err.message : '导出失败');
-    }
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImporting(true);
-    setError(null);
-
-    try {
-      const parsed = await parseTemplateBackup(file);
-      const nameSet = new Set(templates.map((t) => t.name));
-      const conflictCount = parsed.manifest.templates.filter((t) => nameSet.has(t.name)).length;
-      const newCount = parsed.manifest.templates.length - conflictCount;
-
-      setImportPreview({
-        manifest: parsed.manifest,
-        conflictCount,
-        newCount,
-      });
-
-      setImportParsed(parsed);
-    } catch (err) {
-      messageApi.error(err instanceof Error ? err.message : '文件解析失败');
-    } finally {
-      setImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  type ParsedBackupType = Awaited<ReturnType<typeof parseTemplateBackup>>;
-  const [importParsed, setImportParsed] = useState<ParsedBackupType | null>(null);
-
-  const handleImportConfirm = async () => {
-    if (!importParsed) return;
-
-    setImporting(true);
-    try {
-      const result = await importTemplateBackup(importParsed, saveTemplateToLibrary);
-      messageApi.success(`导入完成：成功 ${result.imported} 个，跳过 ${result.skipped} 个`);
-      setImportPreview(null);
-      setImportParsed(null);
-      const refreshed = await loadTemplates();
-      setTemplates(refreshed);
-    } catch (err) {
-      messageApi.error(err instanceof Error ? err.message : '导入失败');
-    } finally {
-      setImporting(false);
-    }
-  };
-
-  const handleImportCancel = () => {
-    setImportPreview(null);
-    setImportParsed(null);
-  };
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('zh-CN', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
     <>
       {contextHolder}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".letsdoc"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-      />
-
-      <Card
-        title={
-          <div className="template-library-card-title">
-            <div className="template-library-title-row">
-              <FolderOutlined style={{ flexShrink: 0 }} />
-              <span>本地模板库</span>
-            </div>
-            <div className="template-library-header-actions">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={async () => {
-                  const templates = await loadTemplates();
-                  setTemplates(templates);
-                }}
-                loading={loading}
-                size="small"
-              >
-                刷新
-              </Button>
-              {templates.length > 0 && (
-                <Popconfirm
-                  title="确认清空模板库"
-                  description="此操作不可恢复，确定要继续吗？"
-                  onConfirm={handleClearAll}
-                  okText="确认"
-                  cancelText="取消"
-                  okType="danger"
-                >
-                  <Button icon={<DeleteOutlined />} size="small" danger>
-                    清空
-                  </Button>
-                </Popconfirm>
-              )}
-            </div>
-          </div>
-        }
-        styles={{ header: { alignItems: 'stretch' }, body: { minWidth: 0, overflow: 'hidden' } }}
-        style={{ marginBottom: 16, minWidth: 0, overflow: 'hidden', width: '100%' }}
-      >
-        <Alert
-          type="info"
-          showIcon
-          message={
-            <span style={{ overflowWrap: 'anywhere' }}>
-              本地模板库仅保存在当前浏览器 IndexedDB 中，不会上传服务器。清理浏览器数据、换电脑或换浏览器后，模板库可能丢失。请不要把唯一的重要模板只保存在浏览器中，建议保留原始 .docx 文件备份。
-            </span>
-          }
-          style={{ marginBottom: 16, fontSize: 12 }}
-        />
-
-        {error && (
+      <Card className="soft-card modal-library-card" title="从本地模板库选择">
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <Alert
-            type="error"
-            message={error}
+            type="info"
             showIcon
-            closable
-            onClose={() => setError(null)}
-            style={{ marginBottom: 16 }}
+            message="模板库保存在当前浏览器本地，不会上传服务器。"
+            style={{ fontSize: 12 }}
           />
-        )}
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-          <Button
-            icon={<ExportOutlined />}
-            onClick={handleExport}
-            disabled={templates.length === 0}
-          >
-            导出模板库
-          </Button>
-          <Button
-            icon={<ImportOutlined />}
-            onClick={handleImportClick}
-            loading={importing}
-          >
-            导入模板库
-          </Button>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <Text type="secondary" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
-            导出的 .letsdoc 文件包含你的 Word 模板文件，请妥善保存，不要随意发送给他人。
-          </Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
-            请仅导入你信任来源的 .letsdoc 文件。
-          </Text>
-        </div>
-
-        {templates.length === 0 && !loading ? (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: '#999' }}>
-            本地模板库为空，请上传模板后保存
-          </div>
-        ) : (
-          <List
-            loading={loading}
-            dataSource={templates}
-            renderItem={(item) => (
-              <List.Item
-                className="template-library-item"
-              >
-                <List.Item.Meta
-                  className="template-library-meta"
-                  title={
-                    editingId === item.id ? (
-                      <Space.Compact block>
-                        <Input
-                          size="small"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          onPressEnter={() => handleRename(item.id)}
-                          autoFocus
-                        />
-                        <Button size="small" type="primary" onClick={() => handleRename(item.id)}>
-                          保存
-                        </Button>
-                        <Button size="small" onClick={() => setEditingId(null)}>
-                          取消
-                        </Button>
-                      </Space.Compact>
-                    ) : (
-                      <Text strong className="template-library-title">{item.name}</Text>
-                    )
-                  }
-                  description={
-                    <div className="template-library-description">
-                      <Text type="secondary" className="template-library-file">
-                        原文件：{item.originalFileName}
-                      </Text>
-                      <div className="template-library-stats">
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          变量：{item.variables.length} 个
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          大小：{formatSize(item.size)}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          更新：{formatDate(item.updatedAt)}
-                        </Text>
-                      </div>
-                      <div className="template-library-tags">
-                        {item.variables.slice(0, 5).map((v) => (
-                          <Tag key={v} color="blue" style={{ marginBottom: 2, fontSize: 11 }}>
-                            {`{{${v}}}`}
-                          </Tag>
-                        ))}
-                        {item.variables.length > 5 && (
-                          <Tag style={{ marginBottom: 2, fontSize: 11 }}>
-                            +{item.variables.length - 5}
-                          </Tag>
-                        )}
-                      </div>
-                    </div>
-                  }
-                />
-                <div className="template-library-actions">
-                  <Button
-                    type={currentTemplateId === item.id ? 'primary' : 'default'}
-                    size="small"
+          <Input
+            placeholder="搜索模板"
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+          />
+          {filtered.length === 0 && !loading ? (
+            <Empty description="暂无模板" />
+          ) : (
+            <List
+              loading={loading}
+              dataSource={filtered}
+              grid={{ gutter: 12, column: 2 }}
+              renderItem={(item) => (
+                <List.Item>
+                  <button
+                    type="button"
+                    className={`template-card-button modal-template-card ${currentTemplateId === item.id ? 'is-current' : ''}`}
                     onClick={() => handleSelect(item)}
                   >
-                    {currentTemplateId === item.id ? '使用中' : '选择'}
-                  </Button>
-                  <Button
-                    icon={<EditOutlined />}
-                    size="small"
-                    title="重命名"
-                    onClick={() => {
-                      setEditingId(item.id);
-                      setEditName(item.name);
-                    }}
-                  />
-                  <Popconfirm
-                    title="确认删除此模板？"
-                    onConfirm={() => handleDelete(item.id)}
-                    okText="确认"
-                    cancelText="取消"
-                  >
-                    <Button icon={<DeleteOutlined />} size="small" danger title="删除" />
-                  </Popconfirm>
-                </div>
-              </List.Item>
-            )}
-          />
-        )}
-      </Card>
-
-      <Modal
-        title="导入模板库预览"
-        open={!!importPreview}
-        onOk={handleImportConfirm}
-        onCancel={handleImportCancel}
-        okText="确认导入"
-        cancelText="取消"
-        confirmLoading={importing}
-      >
-        {importPreview && (
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Alert
-              type="warning"
-              showIcon
-              message="同名模板将覆盖当前本地模板库中的已有模板。"
-              style={{ marginBottom: 12 }}
+                    <div>
+                      <FileTextOutlined />
+                      <strong>{item.name}</strong>
+                      <span>{item.variables.length} 个变量</span>
+                      <div className="template-mini-tags">
+                        {item.variables.slice(0, 3).map((v) => (
+                          <Tag key={v} color="blue">{`{{${v}}}`}</Tag>
+                        ))}
+                      </div>
+                    </div>
+                    <Button type={currentTemplateId === item.id ? 'primary' : 'default'} size="small">
+                      {currentTemplateId === item.id ? '当前' : '使用'}
+                    </Button>
+                  </button>
+                </List.Item>
+              )}
             />
-            <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label="备份文件版本">
-                {importPreview.manifest.version}
-              </Descriptions.Item>
-              <Descriptions.Item label="导出时间">
-                {new Date(importPreview.manifest.exportedAt).toLocaleString('zh-CN')}
-              </Descriptions.Item>
-              <Descriptions.Item label="模板总数">
-                {importPreview.manifest.templates.length} 个
-              </Descriptions.Item>
-              <Descriptions.Item label="新增模板">
-                <Text type="success">{importPreview.newCount} 个</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="同名覆盖">
-                <Text type={importPreview.conflictCount > 0 ? 'warning' : undefined}>
-                  {importPreview.conflictCount} 个
-                </Text>
-              </Descriptions.Item>
-            </Descriptions>
-            <div style={{ marginTop: 12 }}>
-              <Text strong style={{ fontSize: 13 }}>模板列表：</Text>
-              <div style={{ maxHeight: 200, overflow: 'auto', marginTop: 8 }}>
-                {importPreview.manifest.templates.map((t) => (
-                  <div key={t.id} style={{ fontSize: 12, lineHeight: '22px' }}>
-                    {t.name}
-                    <Text type="secondary" style={{ marginLeft: 8 }}>
-                      ({t.variables.length} 个变量，{formatSize(t.size)})
-                    </Text>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Space>
-        )}
-      </Modal>
+          )}
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            需要管理、重命名或导入导出模板，请前往「模板库」页面。
+          </Text>
+        </Space>
+      </Card>
     </>
   );
 }

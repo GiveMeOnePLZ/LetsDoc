@@ -80,12 +80,12 @@ export default function BackupPage({ onTemplateSaved }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', minWidth: 0 }}>
+    <div className="page-fade-in" style={{ maxWidth: 640, margin: '0 auto', minWidth: 0 }}>
       {contextHolder}
       <Title level={4} style={{ marginBottom: 24 }}>模板库备份</Title>
 
       <Card title="导出模板库" style={{ marginBottom: 16, borderRadius: 12 }}>
-        <Space direction="vertical" style={{ width: '100%' }} size={8}>
+        <Space orientation="vertical" style={{ width: '100%' }} size={8}>
           <Text type="secondary" style={{ overflowWrap: 'anywhere' }}>
             将本地模板库导出为备份文件，可在其他浏览器或电脑中导入恢复。
           </Text>
@@ -95,14 +95,14 @@ export default function BackupPage({ onTemplateSaved }: Props) {
           <Alert 
             type="info" 
             showIcon 
-            message="备份文件使用 .letsdoc 格式。" 
+            title="备份文件使用 .letsdoc 格式。"
             style={{ fontSize: 12 }} 
           />
         </Space>
       </Card>
 
       <Card title="导入模板库" style={{ marginBottom: 16, borderRadius: 12 }}>
-        <Space direction="vertical" style={{ width: '100%' }} size={8}>
+        <Space orientation="vertical" style={{ width: '100%' }} size={8}>
           <Text type="secondary" style={{ overflowWrap: 'anywhere' }}>
             从备份文件恢复模板库。支持 .letsdoc 格式。
           </Text>
@@ -120,7 +120,7 @@ export default function BackupPage({ onTemplateSaved }: Props) {
       </Card>
 
       <Card size="small" style={{ borderRadius: 12 }}>
-        <Space direction="vertical" size={8}>
+        <Space orientation="vertical" size={8}>
           <Text type="secondary" style={{ fontSize: 12, overflowWrap: 'anywhere' }}>
             从备份文件恢复模板库。支持 .letsdoc 格式。
           </Text>
@@ -141,11 +141,11 @@ export default function BackupPage({ onTemplateSaved }: Props) {
         width={600}
       >
         {importPreview && (
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Space orientation="vertical" style={{ width: '100%' }}>
             <Alert 
               type="warning" 
               showIcon 
-              message="同名模板将覆盖当前本地模板库中的已有模板。" 
+              title="同名模板将覆盖当前本地模板库中的已有模板。"
               style={{ marginBottom: 12 }} 
             />
             <Descriptions column={1} size="small" bordered>

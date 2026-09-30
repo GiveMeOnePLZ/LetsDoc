@@ -750,6 +750,51 @@
   display: none;
 }
 
+.editor-view-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 16px;
+}
+
+.variable-search { max-width: 320px; }
+.record-form-editor { min-width: 0; }
+.record-form-editor .mobile-record-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px;
+  border: 1px solid var(--ld-line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.mobile-record-editor-head .ant-select { width: 200px; max-width: calc(100% - 100px); }
+.record-form-editor .mobile-record-actions { display: flex; gap: 8px; margin: 12px 0 20px; }
+.record-field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+.record-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.record-field label { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.record-field .ant-input { min-height: 40px; scroll-margin-block: 130px; }
+.record-field .ant-select { width: 100%; }
+.record-field .ant-btn-link { width: fit-content; padding: 0; }
+.field-error { color: #c43b2d; font-size: 12px; }
+
+@media (max-width: 1279px) {
+  .record-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .record-field-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .variable-search { max-width: none; }
+  .record-field .ant-input { min-height: 44px; font-size: 16px; }
+  .record-form-editor .mobile-record-actions { display: grid; }
+}
+
 @media (max-width: 1100px) {
   .app-main-content {
     padding: 22px 24px 18px;

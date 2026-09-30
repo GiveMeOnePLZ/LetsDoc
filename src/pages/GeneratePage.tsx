@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Layout, Typography, Button, Space, Card, Alert, Progress, Table, Input, Select, Grid,
-  Divider, Upload, message, Popover, Modal, Tag,
+  Divider, Upload, message, Popover, Modal, Tag, Segmented,
 } from 'antd';
 import {
   PlusOutlined, CopyOutlined, DeleteOutlined, RocketOutlined, WarningOutlined,
   AimOutlined, InboxOutlined, DownloadOutlined, UploadOutlined,
   SaveOutlined, CalendarOutlined, CloseOutlined, FolderOpenOutlined, FileTextOutlined,
-  SafetyCertificateOutlined, LeftOutlined, RightOutlined,
+  SafetyCertificateOutlined, LeftOutlined, RightOutlined, SearchOutlined,
 } from '@ant-design/icons';
 import TemplateUpload from '../components/TemplateUpload';
 import TemplateDiagnostics from '../components/TemplateDiagnostics';
@@ -83,7 +83,20 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const [activeMobileRow, setActiveMobileRow] = useState(0);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const [editorView, setEditorView] = useState<'form' | 'table'>('form');
+  const [variableSearch, setVariableSearch] = useState('');
+  const [focusTarget, setFocusTarget] = useState<{ row: number; variable: string } | null>(null);
+  const fieldListRef = useRef<HTMLDivElement>(null);
+  const useFormEditor = isMobile || editorView === 'form';
   const activeMobileRowIndex = Math.min(activeMobileRow, Math.max(0, rows.length - 1));
+  const filteredVariables = variables.filter((variable) => variable.toLocaleLowerCase().includes(variableSearch.trim().toLocaleLowerCase()));
+
+  useEffect(() => {
+    if (!focusTarget || !useFormEditor) return;
+    const input = fieldListRef.current?.querySelector<HTMLInputElement>(`[data-variable-index="${variables.indexOf(focusTarget.variable)}"]`);
+    input?.focus({ preventScroll: true });
+    input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [focusTarget, useFormEditor, variables]);
 
   useEffect(() => {
     if (!template) return;
@@ -103,22 +116,31 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
 
   const addRow = useCallback(() => { setRows((prev) => [...prev, createEmptyRow(variables)]); }, [variables]);
   const copyLastRow = useCallback(() => { setRows((prev) => prev.length === 0 ? prev : [...prev, { ...prev[prev.length - 1] }]); }, []);
-  const deleteRow = useCallback((index: number) => { setRows((prev) => prev.filter((_, i) => i !== index)); }, []);
+  const deleteRow = useCallback((index: number) => {
+    setRows((prev) => {
+      const next = prev.length <= 1 ? [createEmptyRow(variables)] : prev.filter((_, i) => i !== index);
+      debouncedSave(next);
+      return next;
+    });
+  }, [variables, debouncedSave]);
   const clearAll = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     const fresh = Array.from({ length: 1 }, () => createEmptyRow(variables));
     setRows(fresh); setShowValidation(false); setGenState('idle'); setGenError(null);
     saveManualDraft(variables, fresh);
   }, [variables]);
 
   const addMobileRow = () => {
+    if (rows.length >= MAX_BATCH_ROWS) { messageApi.warning(`最多支持 ${MAX_BATCH_ROWS} 条数据`); return; }
     const nextIndex = rows.length;
-    setRows((prev) => [...prev, createEmptyRow(variables)]);
+    setRows((prev) => { const next = [...prev, createEmptyRow(variables)]; debouncedSave(next); return next; });
     setActiveMobileRow(nextIndex);
   };
 
   const copyMobileRow = () => {
+    if (rows.length >= MAX_BATCH_ROWS) { messageApi.warning(`最多支持 ${MAX_BATCH_ROWS} 条数据`); return; }
     const nextIndex = rows.length;
-    setRows((prev) => [...prev, { ...(prev[activeMobileRowIndex] || createEmptyRow(variables)) }]);
+    setRows((prev) => { const next = [...prev, { ...(prev[activeMobileRowIndex] || createEmptyRow(variables)) }]; debouncedSave(next); return next; });
     setActiveMobileRow(nextIndex);
   };
 
@@ -180,17 +202,17 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
   const handleLocateFirstError = () => {
     if (validation.rowErrors.length === 0) return;
     const firstError = validation.rowErrors[0];
-    const tableElement = tableRef.current?.querySelector('.ant-table-body');
-    if (tableElement) {
-      const trs = tableElement.querySelectorAll('tr');
-      if (trs[firstError.rowIndex - 1]) trs[firstError.rowIndex - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    setShowValidation(true);
+    setEditorView('form');
+    setVariableSearch('');
+    setActiveMobileRow(firstError.rowIndex - 1);
+    setFocusTarget({ row: firstError.rowIndex - 1, variable: firstError.missingFields[0] });
     messageApi.info(`定位到第 ${firstError.rowIndex} 行，缺少: ${firstError.missingFields[0]}`);
   };
 
   const validation = validateRows(rows, variables);
   const canGenerate = validation.rowErrors.length === 0 && validation.valid > 0;
-  const validRowCount = rows.filter((row) => variables.some((v) => row[v] && row[v].trim() !== '')).length;
+  const validRowCount = validation.valid;
   const handleValidate = () => setShowValidation(true);
 
   const handleGenerate = async () => {
@@ -425,7 +447,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
           <Alert 
             type="info" 
             showIcon 
-            message="已自动恢复上次草稿数据" 
+            title="已自动恢复上次草稿数据"
             closable 
             onClose={() => setDraftRestored(false)} 
             style={{ marginBottom: 16 }} 
@@ -450,8 +472,8 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
             ) : (
             <div className="generate-toolbar" style={{ marginBottom: 16 }}>
               <div className="generate-toolbar-left">
-                <Button icon={<PlusOutlined />} onClick={addRow}>新增一行</Button>
-                <Button icon={<CopyOutlined />} onClick={copyLastRow}>复制上一行</Button>
+                <Button icon={<PlusOutlined />} onClick={useFormEditor ? addMobileRow : addRow}>{useFormEditor ? '新增一份' : '新增一行'}</Button>
+                {!useFormEditor && <Button icon={<CopyOutlined />} onClick={copyLastRow}>复制上一行</Button>}
                 <Upload accept=".xlsx" showUploadList={false} beforeUpload={handleExcelImport}>
                   <Button icon={<UploadOutlined />}>导入 Excel</Button>
                 </Upload>
@@ -517,41 +539,68 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
               </Space>
             </div>
 
-            {isMobile ? (
-              <section className="mobile-record-editor" aria-label="文书数据填写">
+            <div className="editor-view-toolbar">
+              {!isMobile && <Segmented
+                aria-label="填写视图"
+                value={editorView}
+                options={[{ label: '表单填写', value: 'form' }, { label: '批量表格', value: 'table' }]}
+                onChange={(value) => setEditorView(value as 'form' | 'table')}
+              />}
+              {useFormEditor && <Input
+                className="variable-search"
+                placeholder="搜索变量"
+                prefix={<SearchOutlined />}
+                value={variableSearch}
+                onChange={(event) => setVariableSearch(event.target.value)}
+                allowClear
+              />}
+            </div>
+            {useFormEditor ? (
+              <section className="record-form-editor" aria-label="文书数据填写">
                 <div className="mobile-record-editor-head">
                   <Button
                     type="text"
                     icon={<LeftOutlined />}
                     aria-label="上一条数据"
                     disabled={activeMobileRowIndex === 0}
-                    onClick={() => setActiveMobileRow((index) => Math.max(0, index - 1))}
+                    onClick={() => setActiveMobileRow(Math.max(0, activeMobileRowIndex - 1))}
                   />
-                  <strong>第 {activeMobileRowIndex + 1} 条，共 {rows.length} 条</strong>
+                  <Select
+                    aria-label="当前文书"
+                    value={activeMobileRowIndex}
+                    options={rows.map((_, index) => ({ value: index, label: `第 ${index + 1} 份 / 共 ${rows.length} 份` }))}
+                    onChange={setActiveMobileRow}
+                  />
                   <Button
                     type="text"
                     icon={<RightOutlined />}
                     aria-label="下一条数据"
                     disabled={activeMobileRowIndex >= rows.length - 1}
-                    onClick={() => setActiveMobileRow((index) => Math.min(rows.length - 1, index + 1))}
+                    onClick={() => setActiveMobileRow(Math.min(rows.length - 1, activeMobileRowIndex + 1))}
                   />
                 </div>
                 <div className="mobile-record-actions">
-                  <Button icon={<CopyOutlined />} onClick={copyMobileRow}>复制当前条</Button>
-                  <Button danger icon={<DeleteOutlined />} onClick={deleteMobileRow}>删除当前条</Button>
+                  <Button icon={<CopyOutlined />} onClick={copyMobileRow}>复制当前份</Button>
+                  <Button danger icon={<DeleteOutlined />} onClick={deleteMobileRow}>删除当前份</Button>
                 </div>
-                <div className="mobile-field-list">
-                  {variables.map((variable) => {
+                <div className="record-field-grid" ref={fieldListRef}>
+                  {filteredVariables.map((variable) => {
                     const currentValue = String(rows[activeMobileRowIndex]?.[variable] || '');
                     const fieldPresets = presets[variable] || [];
+                    const missing = showValidation && validation.rowErrors.some((error) => error.rowIndex === activeMobileRowIndex + 1 && error.missingFields.includes(variable));
                     return (
-                      <label className="mobile-field" key={variable}>
-                        <span>{variable}</span>
+                      <div className="record-field" key={variable}>
+                        <label htmlFor={`variable-${variables.indexOf(variable)}`}>{variable}</label>
                         <Input
+                          id={`variable-${variables.indexOf(variable)}`}
+                          data-variable-index={variables.indexOf(variable)}
+                          status={missing ? 'error' : undefined}
+                          aria-invalid={missing}
                           value={currentValue}
                           placeholder={`填写${variable}`}
                           onChange={(e) => updateCell(activeMobileRowIndex, variable, e.target.value)}
                         />
+                        {missing && <span className="field-error">请填写此变量</span>}
                         {fieldPresets.length > 0 && (
                           <Select
                             size="small"
@@ -564,10 +613,11 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                         {currentValue.trim() && !fieldPresets.includes(currentValue.trim()) && (
                           <Button type="link" size="small" onClick={() => handleSavePreset(variable, currentValue)}>保存为常用值</Button>
                         )}
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
+                {filteredVariables.length === 0 && <div className="empty-inline">没有匹配的变量</div>}
               </section>
             ) : (
             <div ref={tableRef} className="generate-table-shell">
@@ -594,7 +644,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
             {showValidation && (
               <div style={{ marginTop: 12 }}>
                 <Divider plain style={{ margin: '8px 0' }}>校验结果</Divider>
-                <Space size="large">
+                <Space size="large" wrap>
                   <Text>总行数: <strong>{validation.total}</strong></Text>
                   <Text>空行: <strong>{validation.empty}</strong></Text>
                   <Text>有效行: <strong>{validation.valid}</strong></Text>
@@ -602,7 +652,8 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                 </Space>
                 {validation.rowErrors.length > 0 && (
                   <Alert type="warning" showIcon icon={<WarningOutlined />}
-                    message={`以下 ${validation.rowErrors.length} 行存在空值`}
+                    title={`以下 ${validation.rowErrors.length} 行存在空值`}
+                    action={<Button size="small" icon={<AimOutlined />} onClick={handleLocateFirstError}>定位缺失项</Button>}
                     description={<div style={{ maxHeight: 160, overflow: 'auto' }}>{validation.rowErrors.map((re) => (
                       <div key={re.rowIndex} style={{ fontSize: 12, lineHeight: '20px' }}>第 {re.rowIndex} 行缺少: {re.missingFields.join(', ')}</div>
                     ))}</div>}
@@ -610,7 +661,7 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
                   />
                 )}
                 {validation.rowErrors.length === 0 && validation.valid > 0 && (
-                  <Alert type="success" message="数据校验通过，可以生成。" showIcon style={{ marginTop: 8 }} />
+                  <Alert type="success" title="数据校验通过，可以生成。" showIcon style={{ marginTop: 8 }} />
                 )}
               </div>
             )}
@@ -623,13 +674,13 @@ export default function GeneratePage({ template, onTemplateLoaded, onTemplateCle
             )}
 
             {genError && (
-              <Alert type="error" message={genError} showIcon closable onClose={() => setGenError(null)} style={{ marginTop: 8 }} />
+              <Alert type="error" title={genError} showIcon closable onClose={() => setGenError(null)} style={{ marginTop: 8 }} />
             )}
 
             {genState === 'done' && (
               <Alert
                 type="success"
-                message={validRowCount <= 1 ? '文书已生成并开始下载。' : `已生成 ${validRowCount} 份文书，zip 文件已开始下载。`}
+                title={validRowCount <= 1 ? '文书已生成并开始下载。' : `已生成 ${validRowCount} 份文书，zip 文件已开始下载。`}
                 showIcon style={{ marginTop: 8 }}
               />
             )}

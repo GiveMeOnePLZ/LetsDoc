@@ -21,7 +21,7 @@ import { saveTemplateToLibrary } from '../utils/templateStore';
 import { APP_VERSION } from '../utils/constants';
 import type { SavedTemplateSummary } from '../utils/templateStore';
 import type { TemplateData } from '../types';
-import TemplateDownloadButton from '../components/TemplateDownloadButton';
+import { saveBlob } from '../utils/downloadFile';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -33,6 +33,7 @@ interface Props {
 export default function TemplateManagePage({ template: currentTemplate, onTemplateLoaded }: Props) {
   const [templates, setTemplates] = useState<SavedTemplateSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [searchText, setSearchText] = useState('');
@@ -77,6 +78,22 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
     });
     setHash('generate');
     messageApi.success(`已加载模板：${full.name}`);
+  };
+
+  const handleDownload = async (id: string) => {
+    if (downloadingId) return;
+    setDownloadingId(id);
+    try {
+      const template = await getSavedTemplate(id);
+      if (!template) throw new Error('模板数据不存在，请刷新列表');
+      if (await saveBlob(template.templateBlob, template.originalFileName)) {
+        messageApi.success('模板已保存');
+      }
+    } catch (err) {
+      messageApi.error(err instanceof Error ? err.message : '下载模板失败');
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const handleRename = async (id: string) => {
@@ -188,11 +205,14 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
                     trigger={['click']}
                     menu={{
                       items: [
+                        { key: 'download', label: downloadingId === item.id ? '正在下载…' : '下载模板', icon: <DownloadOutlined />, disabled: downloadingId !== null },
                         { key: 'rename', label: '重命名', icon: <EditOutlined /> },
                         { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true },
                       ],
                       onClick: ({ key }) => {
-                        if (key === 'rename') {
+                        if (key === 'download') {
+                          void handleDownload(item.id);
+                        } else if (key === 'rename') {
                           setEditingId(item.id);
                           setEditName(item.name);
                         } else if (key === 'delete') {
@@ -208,7 +228,7 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
                       },
                     }}
                   >
-                    <Button type="text" icon={<MoreOutlined />} />
+                    <Button type="text" icon={<MoreOutlined />} aria-label="模板操作" title="模板操作" />
                   </Dropdown>
                 </div>
 
@@ -235,7 +255,6 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
                   {item.variables.length > 5 && <Tag>+{item.variables.length - 5}</Tag>}
                 </div>
                 <div className="template-tile-actions">
-                  <TemplateDownloadButton templateId={item.id} iconOnly />
                   <Button type="primary" block onClick={() => handleLoadTemplate(item.id)}>
                     {currentTemplate?.id === item.id ? '继续使用' : '使用模板'}
                   </Button>

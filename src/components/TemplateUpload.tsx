@@ -5,6 +5,7 @@ import { parseTemplate } from '../utils/templateParser';
 import { saveLastTemplate } from '../utils/storage';
 import { saveTemplateToLibrary } from '../utils/templateStore';
 import type { TemplateData } from '../types';
+import TemplateDownloadButton from './TemplateDownloadButton';
 
 const { Dragger } = Upload;
 const { Text } = Typography;
@@ -109,6 +110,7 @@ export default function TemplateUpload({
                 <span>当前模板</span>
               </div>
               <div className="template-upload-header-actions">
+                <TemplateDownloadButton template={template} iconOnly />
                 <Button
                   icon={<SaveOutlined />}
                   onClick={handleSaveToLibrary}

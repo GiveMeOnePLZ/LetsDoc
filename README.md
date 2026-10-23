@@ -1,12 +1,13 @@
 # LetsDoc 文书模板生成器
 
-LetsDoc 1.0.0 是一个纯前端、本地处理的 Word 模板生成工具。通过 `{{变量名}}` 占位符填写数据，可生成单份文书，也可将多行数据批量打包为 ZIP。
+LetsDoc 1.1.0 是一个纯前端、本地处理的 Word 模板生成工具。通过 `{{变量名}}` 占位符填写数据，可生成单份文书，也可将多行数据批量打包为 ZIP。
 
 文件解析和文书生成均在浏览器本地完成，不会上传服务器。
 
 ## 主要功能
 
 - 工作台首页、最近模板和本地模板库
+- 下载当前上传或模板库中保存的原始 `.docx` 模板，保留原文件名和占位符；桌面版可选择保存位置
 - 网页表格填写，支持新增、复制、删除和整列填充
 - 导入 `.xlsx` 数据，最多批量生成 500 份文书
 - 模板体检、数据校验和错误定位
@@ -110,7 +111,7 @@ npm run tauri:build:portable
 npm run tauri:package:portable
 ```
 
-便携包输出为 `release/LetsDoc-portable-1.0.0-windows-x64.zip`。目标电脑需要 Microsoft Edge WebView2 Runtime，常规 Windows 10/11 通常已安装。
+便携包输出为 `release/LetsDoc-portable-1.1.0-windows-x64.zip`。目标电脑需要 Microsoft Edge WebView2 Runtime，常规 Windows 10/11 通常已安装。
 
 未签名程序可能触发 Windows SmartScreen 提示。
 

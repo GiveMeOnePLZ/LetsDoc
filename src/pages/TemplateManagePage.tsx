@@ -21,6 +21,7 @@ import { saveTemplateToLibrary } from '../utils/templateStore';
 import { APP_VERSION } from '../utils/constants';
 import type { SavedTemplateSummary } from '../utils/templateStore';
 import type { TemplateData } from '../types';
+import TemplateDownloadButton from '../components/TemplateDownloadButton';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -234,6 +235,7 @@ export default function TemplateManagePage({ template: currentTemplate, onTempla
                   {item.variables.length > 5 && <Tag>+{item.variables.length - 5}</Tag>}
                 </div>
                 <div className="template-tile-actions">
+                  <TemplateDownloadButton templateId={item.id} iconOnly />
                   <Button type="primary" block onClick={() => handleLoadTemplate(item.id)}>
                     {currentTemplate?.id === item.id ? '继续使用' : '使用模板'}
                   </Button>

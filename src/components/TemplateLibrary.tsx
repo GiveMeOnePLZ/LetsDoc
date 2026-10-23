@@ -4,6 +4,7 @@ import { FileTextOutlined, SearchOutlined } from '@ant-design/icons';
 import { getSavedTemplates, getSavedTemplate } from '../utils/templateStore';
 import type { SavedTemplateSummary } from '../utils/templateStore';
 import type { TemplateData } from '../types';
+import TemplateDownloadButton from './TemplateDownloadButton';
 
 const { Text } = Typography;
 
@@ -98,6 +99,9 @@ export default function TemplateLibrary({ onTemplateSelected, currentTemplateId 
                       {currentTemplateId === item.id ? '当前' : '使用'}
                     </Button>
                   </button>
+                  <div style={{ marginTop: 8 }}>
+                    <TemplateDownloadButton templateId={item.id} />
+                  </div>
                 </List.Item>
               )}
             />
